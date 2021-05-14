@@ -21,7 +21,7 @@ working directory, \code{\link[base]{getwd}()}. Tilde expansion (see \code{
 
 \item{prefix}{A regular expression to match the filename (without extension).}
 
-\item{suffix}{A character to match the file extension, e. g. "csv".}
+\item{suffix}{A character to match the file extension, e.g. "csv".}
 
 \item{pattern}{A \link[base:regex]{regular expression}. Only file names which
 match the regular expression will be returned.}

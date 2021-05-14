@@ -1,4 +1,4 @@
-# ==== DIRECTORY NAVIAGATION ====
+# ==== DIRECTORY NAVIGATION ====
 
 #' Express file paths in their canonical form. Truly.
 #'
@@ -124,7 +124,7 @@ select_directory <- function(path = getwd(), caption = "Select a directory",
 #' @param pattern A \link[base:regex]{regular expression}. Only file names which
 #' match the regular expression will be returned.
 #' @param prefix A regular expression to match the filename (without extension).
-#' @param suffix A character to match the file extension, e. g. "csv".
+#' @param suffix A character to match the file extension, e.g. "csv".
 #'
 #'
 #' @details
@@ -203,7 +203,7 @@ select_single_file <- function(path = getwd(), prefix = "*.+", suffix = "*",
 #'
 #' @param file A path or URL to an xlsx file or workbook.
 #' @inheritParams openxlsx::read.xlsx
-#' @param data_upper_left A string specifying the top left corner (i. e. cell)
+#' @param data_upper_left A string specifying the top left corner (i.e. cell)
 #' in Excel coordinates of the plate.
 #' @param index_row A string specifying the row (in Excel coordinates) where the
 #' plate column index (e.g. running 1 through 24) is found.
@@ -222,7 +222,7 @@ select_single_file <- function(path = getwd(), prefix = "*.+", suffix = "*",
 #'
 #' When importing metadata, it is assumed that \code{meta_row} and \code{meta_col}
 #' run parallel to the plate. Offset is allowed. The category names of the metadata
-#' are specified while setting up.
+#' must be specified explicitly during the setup; they are not imported.
 #'
 #' In the example below, the first cell of the acutal plate is "B3". Three metadata
 #' columns are given: One in row "1" (here: Concentration), which is applied column-wise,
@@ -231,7 +231,6 @@ select_single_file <- function(path = getwd(), prefix = "*.+", suffix = "*",
 #' the actual plate rows. So is the text "xyz" shown in red.
 #'
 #' \figure{platelayout_maldi.png}{options: width=600 alt="A sample plate layout provided in \code{summerrmass}."}
-#'
 #'
 #' @return
 #' A \code{\link[tibble:tibble]{tibble}} in long form with the columsn \code{well},

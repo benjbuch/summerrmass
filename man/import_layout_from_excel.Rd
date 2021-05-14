@@ -21,7 +21,7 @@ import_layout_from_excel(
 
 \item{sheet}{The name or index of the sheet to read data from.}
 
-\item{data_upper_left}{A string specifying the top left corner (i. e. cell)
+\item{data_upper_left}{A string specifying the top left corner (i.e. cell)
 in Excel coordinates of the plate.}
 
 \item{index_row}{A string specifying the row (in Excel coordinates) where the
@@ -56,7 +56,7 @@ are allowed and will be unmerged (see \code{\link[openxlsx:read.xlsx]{read.xlsx}
 
 When importing metadata, it is assumed that \code{meta_row} and \code{meta_col}
 run parallel to the plate. Offset is allowed. The category names of the metadata
-are specified while setting up.
+must be specified explicitly during the setup; they are not imported.
 
 In the example below, the first cell of the acutal plate is "B3". Three metadata
 columns are given: One in row "1" (here: Concentration), which is applied column-wise,
