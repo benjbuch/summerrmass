@@ -2,18 +2,18 @@
 % Please edit documentation in R/fun_helpers.R
 \name{select_from_list}
 \alias{select_from_list}
-\title{Select from a list.}
+\title{Prompt to select from a list of options.}
 \usage{
 select_from_list(items, caption = "Select an item")
 }
 \arguments{
 \item{items}{A character vector of options/items.}
 
-\item{caption}{The prompt}
+\item{caption}{The prompt.}
 }
 \value{
 A single character element.
 }
 \description{
-Helper to select an item from a list.
+Helper asking the user to select an item from a list.
 }

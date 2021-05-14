@@ -47,7 +47,7 @@ select_from_list <- function(items, caption = "Select an item") {
 
   stopifnot(is.character(items))
 
-  it (length(items) == 1) return(items)
+  if (length(items) == 1) return(items)
 
   choice <- readline(paste0(
     caption, "\n",
@@ -199,4 +199,154 @@ select_single_file <- function(path = getwd(), prefix = "*.+", suffix = "*",
 
 # ==== GENERAL FILE IMPORT AND EXPORT ====
 
+#' Import a (plate) layout from Excel file.
+#'
+#' @param file A path or URL to an xlsx file or workbook.
+#' @inheritParams openxlsx::read.xlsx
+#' @param data_upper_left A string specifying the top left corner (i. e. cell)
+#' in Excel coordinates of the plate.
+#' @param index_row A string specifying the row (in Excel coordinates) where the
+#' plate column index (e.g. running 1 through 24) is found.
+#' @param index_col A string specifying the column (in Excel coordinates) where
+#' the plate rows index (e.g. running A through P) is found.
+#' @param meta_row A named character vector to specify additional metadata to be
+#' assigned to each plate column.
+#' @param meta_col A named character vector to specify additional metadata to be
+#' assigned to each plate row.
+#' @param plate_nrow Number of rows to import starting from \code{data_upper_left}.
+#' @param plate_ncol Number of columns to import starting from \code{data_upper_left}.
+#'
+#' @details
+#' The content of each Excel cell of the plate is read as a string. Merged cells
+#' are allowed and will be unmerged (see \code{\link[openxlsx:read.xlsx]{read.xlsx}}).
+#'
+#' When importing metadata, it is assumed that \code{meta_row} and \code{meta_col}
+#' run parallel to the plate. Offset is allowed. The category names of the metadata
+#' are specified while setting up.
+#'
+#' In the example below, the first cell of the acutal plate is "B3". Three metadata
+#' columns are given: One in row "1" (here: Concentration), which is applied column-wise,
+#' and two parallel to the rows in column "Z" (here: Duplicate) and "AA" (here: Source).
+#' The name tags highlighted in yellow are not imported since they are not parallel to
+#' the actual plate rows. So is the text "xyz" shown in red.
+#'
+#' \figure{platelayout_maldi.png}{options: width=600 alt="A sample plate layout provided in \code{summerrmass}."}
+#'
+#'
+#' @return
+#' A \code{\link[tibble:tibble]{tibble}} in long form with the columsn \code{well},
+#' \code{well_let} (letters, row index of the plate), \code{well_num} (integers
+#' as strings, column index of the plate), \code{content} and a column for each
+#' metadata specified.
+#'#'
+#' @examples
+#' layout_file <- system.file("extdata", "platelayout_maldi.xlsx", package = "summerrmass")
+#'
+#' import_layout_from_excel(layout_file,
+#'   # metadata stored in row number "1" (Excel coordinates) contains concentration
+#'   meta_row = c(Concentration = 1),
+#'   # metadata stored in column "Z" (Excel coordinates) contains rowwise metadata;
+#'   # missing values are "NA", the order in meta_col determines the column arrangement
+#'   meta_col = c(Source = "AA", Duplicates = "Z"))
+#'
+#' @export
+import_layout_from_excel <- function(
+  file,
+  sheet = 1,
+  data_upper_left = "B3",
+  index_row = "2",
+  index_col = "A",
+  meta_row  = c(concentration = "1"),
+  meta_col  = character(),
+  plate_nrow = 16,
+  plate_ncol = 24
+) {
+
+  require(dplyr, quietly = TRUE)
+
+  # convert excel coordinates to R coordinates
+
+  from.excel <- function(s) {
+
+    # from: https://stackoverflow.com/questions/34537243
+
+    s_upper <- toupper(s)
+    # Convert string to a vector of single letters
+    s_split <- unlist(strsplit(s_upper, split=""))
+    # Convert each letter to the corresponding number
+    s_number <- sapply(s_split, function(x) {which(LETTERS == x)})
+    # Derive the numeric value associated with each letter
+    numbers <- 26^((length(s_number)-1):0)
+    # Calculate the column number
+    column_number <- sum(s_number * numbers)
+    column_number
+
+  }
+
+  # only the first match to a continuous string of numerals or letters is matched
+  # and interpreted as row/column indexes
+  from.excel.row <- function(x) as.numeric(stringr::str_extract(x, "[0-9]+"))
+  from.excel.col <- function(x) from.excel(stringr::str_extract(
+    x, stringr::regex("[A-Z]+", ignore_case = TRUE)))
+
+  index_row <- from.excel.row(index_row)
+  index_col <- from.excel.col(index_col)
+
+  data_row <- from.excel.row(data_upper_left)
+  data_col <- from.excel.col(data_upper_left)
+
+  meta_row <- lapply(meta_row, from.excel.row)
+  meta_col <- lapply(meta_col, from.excel.col)
+
+  plate <- openxlsx::read.xlsx(file, fillMergedCells = TRUE, colNames = FALSE)
+  # fillMergedCells does not work when rows and cols specification is given; thus
+  # need to separate from the following code
+  datap <- plate[
+    data_row:(data_row + plate_nrow - 1),
+    data_col:(data_col + plate_ncol - 1)] %>%
+    # set row and column names according to the values specified by the user within
+    # the excel sheet; this allows for more flexibility when adjusting plate layout
+    magrittr::set_rownames(plate[data_row:(data_row + plate_nrow - 1), index_col]) %>%
+    magrittr::set_colnames(sprintf("%02d", as.numeric(
+      plate[index_row, data_col:(data_col + plate_ncol - 1)]))) %>%
+    #
+    tibble::as_tibble(rownames = "well_let") %>%
+    # make sure all entries (including NA) are of type character
+    dplyr::mutate(across(where(is.numeric), as.character)) %>%
+    # make long form
+    tidyr::pivot_longer(cols = -well_let, names_to = "well_num", values_to = "content") %>%
+    tidyr::unite(well_let, well_num, col = "well", sep = "", remove = FALSE)
+
+  # for each metadata row or column we assume that it is parallel to the plate
+
+  get_meta_row <- function(i) tibble::tibble(
+    # well numbers from the index row
+    well_num = sprintf("%02d", as.numeric(
+      plate[index_row, data_col:(data_col + plate_ncol - 1)])),
+    # data from the metadata row
+    meta = as.character(plate[i, data_col:(data_col + plate_ncol - 1)])
+  )
+
+  get_meta_col <- function(i) tibble::tibble(
+    # well letters from the index col
+    well_let = plate[data_row:(data_row + plate_nrow - 1), index_col],
+    # data from the metadata col
+    meta = as.character(plate[data_row:(data_row + plate_nrow - 1), i])
+  )
+
+  if (length(meta_row) > 0) datap <- dplyr::left_join(datap, dplyr::bind_rows(lapply(
+    as.list(meta_row), get_meta_row), .id = "mtype") %>%
+      tidyr::pivot_wider(id_cols = "well_num", names_from = mtype, values_from = meta),
+    by = "well_num")
+
+  if (length(meta_col) > 0) datap <- dplyr::left_join(datap, dplyr::bind_rows(lapply(
+    as.list(meta_col), get_meta_col), .id = "mtype") %>%
+      tidyr::pivot_wider(id_cols = "well_let", names_from = mtype, values_from = meta),
+    by = "well_let")
+
+  attr(datap, "file") <- file
+
+  return(datap)
+
+}
 
