@@ -43,7 +43,7 @@ as_well <- function(well, as.tibble = FALSE, to.upper = TRUE, zero.padding = 2) 
 
   }
 
-  return(res)
+  res
 
 }
 
@@ -64,10 +64,11 @@ as_well <- function(well, as.tibble = FALSE, to.upper = TRUE, zero.padding = 2) 
 #' @return
 #' A character vector.
 #'
-normalizePath <- function(path, verbose = getOption("verbose")) {
+normalizePath <- function(path) {
 
-  if (verbose) message("... ", getNamespaceName(environment(normalizePath)),
-                       ":normalizePath received '", path, "'")
+  if (getOption("verbose")) summer_message_debug(
+    getNamespaceName(environment(normalizePath)),
+    ":normalizePath received ", sQuote(path))
 
   norm_path <- stringr::str_replace(
     base::normalizePath(path, winslash = .Platform$file.sep, mustWork = FALSE),
@@ -75,10 +76,11 @@ normalizePath <- function(path, verbose = getOption("verbose")) {
     pattern = paste0(.Platform$file.sep, "$"), replacement = ""
   )
 
-  if (verbose) message("... ", getNamespaceName(environment(normalizePath)),
-                       ":normalizePath returned '", norm_path, "'")
+  if (getOption("verbose")) summer_message_debug(
+    getNamespaceName(environment(normalizePath)),
+    ":normalizePath returned '", sQuote(norm_path))
 
-  return(norm_path)
+  norm_path
 
 }
 
@@ -117,7 +119,7 @@ select_from_list <- function(items, caption = "Select an item") {
 
   }
 
-  return(item)
+  item
 
 }
 
@@ -158,7 +160,7 @@ select_directory <- function(path = getwd(), caption = "Select a directory",
 
   path <- normalizePath(path)
 
-  return(path)
+  path
 
 }
 
@@ -241,7 +243,7 @@ select_single_file <- function(path = getwd(), prefix = "*.+", suffix = "*",
 
   dir_files <- normalizePath(dir_files)
 
-  return(dir_files)
+  dir_files
 
 }
 
@@ -396,7 +398,7 @@ import_layout_from_excel <- function(
 
   attr(datap, "file") <- file
 
-  return(datap)
+  datap
 
 }
 
@@ -600,6 +602,6 @@ import_layout_from_paths <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
 
   attr(datad, "dir") <- relative_to
 
-  return(datad)
+  datad
 
 }
