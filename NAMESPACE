@@ -3,5 +3,6 @@
 export(as_well)
 export(import_layout_from_excel)
 export(import_layout_from_paths)
+export(import_maldi_spectra)
 export(select_directory)
 export(select_single_file)
