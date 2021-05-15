@@ -175,7 +175,6 @@ select_directory <- function(path = getwd(), caption = "Select a directory",
 #' @param prefix A regular expression to match the filename (without extension).
 #' @param suffix A character to match the file extension, e.g. "csv".
 #'
-#'
 #' @details
 #' In case multiple files are found, the user is prompted to choose one option
 #' or none.
@@ -431,7 +430,7 @@ import_layout_from_excel <- function(
 #' \code{relative_to} is (like all \code{paths}) expanded before being hidden.
 #' It is preserved as \code{attr(., "dir")} for future use.
 #'
-#' @section Sample groups by nesting parent folders:
+#' \subsection{Sample groups by nesting parent folders}{
 #'
 #' Sample groups are determined from the enclosing (parent) folders. For example,
 #' in
@@ -453,7 +452,9 @@ import_layout_from_excel <- function(
 #' Grouping can allow to anaylze multiple directories simultaneously with their
 #' own set of parameters enclosed at an appropriate level of nesting.
 #'
-#' #' @section Replicates by nesting subfolders:
+#' } % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+#'
+#' \subsection{Replicates by nesting subfolders}{
 #'
 #' Sample replicates are determined from the enclosed (child) folders. For example,
 #' in
@@ -466,6 +467,8 @@ import_layout_from_excel <- function(
 #'
 #' the first pivot ("0_A1") contains two replicates, the second pivot ("0_A2") one.
 #'
+#' } % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+#'
 #' @return
 #' A tibble with the experiment layout as determined from the \code{paths}
 #' with columns
@@ -477,7 +480,7 @@ import_layout_from_excel <- function(
 #' position in \code{paths} as \code{findex}.
 #'
 #' @examples
-#' get_layout_from_tree.maldi(c("folderA/0_A1/1/file.x", "folderA/0_A1/2/file.x",
+#' import_layout_from_paths(c("folderA/0_A1/1/file.x", "folderA/0_A1/2/file.x",
 #'   "folderA/0_A2/1/file.x", "folderB/0_A1/1/file.x")
 #'
 #' @export
