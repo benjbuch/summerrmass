@@ -48,7 +48,8 @@ metadata specified.
 #'
 }
 \description{
-Import a (plate) layout from an Excel file.
+A (square plate) layout assigning each cell (well) to a specific content with
+metadata to be taken from columns and/or rows parallel to the plate design.
 }
 \details{
 The content of each Excel cell of the plate is read as a string. Merged cells

@@ -5,7 +5,8 @@
 #' @param well Character vector.
 #' @param as.tibble If \code{TRUE}, a \code{\link[dplyr:tibble]{tibble}} is
 #' returned instead of a list.
-#' @param max.digits Number of digits the well number should be padded to.
+#' @param to.upper Should well letters be converted to uppercase if they are not?
+#' @param zero.padding Number of digits the well number should be padded to.
 #'
 #' @return A list with \code{well_let}, \code{well_num} and \code{well} or a
 #' tibble with the corresponding column names.
@@ -193,8 +194,8 @@ select_directory <- function(path = getwd(), caption = "Select a directory",
 #'
 #' @export
 select_single_file <- function(path = getwd(), prefix = "*.+", suffix = "*",
-                            pattern = NULL, filetype = "file",
-                            caption = "Select a", label = "Select") {
+                               pattern = NULL, filetype = "file",
+                               caption = "Select a", label = "Select") {
 
   if (is.null(pattern)) {
 
@@ -248,6 +249,9 @@ select_single_file <- function(path = getwd(), prefix = "*.+", suffix = "*",
 # ==== GENERAL FILE IMPORT AND EXPORT ====
 
 #' Import a (plate) layout from an Excel file.
+#'
+#' A (square plate) layout assigning each cell (well) to a specific content with
+#' metadata to be taken from columns and/or rows parallel to the plate design.
 #'
 #' @param file A path or URL to an xlsx file or workbook.
 #' @inheritParams openxlsx::read.xlsx
@@ -397,3 +401,202 @@ import_layout_from_excel <- function(
 
 }
 
+#' Import an experiment layout from nested directories.
+#'
+#' Some data is organized in folders that contain files with similar or even
+#' identical names. Given a list of paths pointing to those files, the layout
+#' of the experiment is established from the nesting of folders.
+#'
+#' @param paths A list character vector or list of file paths. See Details
+#' @param pivot A \link[base:regex]{regular expression} describing the
+#' name of a single folder in each tree up to which "groups" and from which
+#' "replicates" are established. See Details.
+#' @param relative_to If not \code{NULL}, this subpath is hidden from the paths
+#' for all operations; "" to suppress hiding; \code{NULL} will hide the subpath
+#' that is common in all elements of \code{paths}.
+#'
+#' @details
+#' \code{paths} can be a vector such as \code{c("path1", "path2", "path3")}
+#' or a list of character vectors, e.g. as a result of averaging data, such as
+#' \code{list(c("path1", "path2"), "path3")}. The latter case is usually not
+#' exposed to the user; the algorithm applies to "path1" and "path3".
+#'
+#' \code{pivot} must be a unique match for each path. Nesting above and within
+#' the matched folder can differ from path to path; care is taken to handle the
+#' grouping accordingly.
+#'
+#' If \code{pivot} is a regular expression with lookahead or lookbehind, these
+#' elements are kept
+#'
+#' \code{relative_to} is (like all \code{paths}) expanded before being hidden.
+#' It is preserved as \code{attr(., "dir")} for future use.
+#'
+#' @section Sample groups by nesting parent folders:
+#'
+#' Sample groups are determined from the enclosing (parent) folders. For example,
+#' in
+#'
+#' \preformatted{
+#' /common1/folder1/folderA/0_A1/...
+#'                       ../0_A2/...
+#'               ../folderB/0_A1/...
+#' /common1/folder2/folderA/0_A1/...
+#'               ../folderB/0_A1/...
+#'                         /0_A2/...
+#' }
+#'
+#' two nested groupings are identified: (1) "folder1" and "folder2" as \code{grp_0},
+#' and (2) "folderA" and "folderB" as \code{grp_1}. The common path "common1"
+#' will not be used as a grouping variable. The first parent is always used as a
+#' grouping variable. The full (unique) grouping is returned under \code{group}.
+#'
+#' Grouping can allow to anaylze multiple directories simultaneously with their
+#' own set of parameters enclosed at an appropriate level of nesting.
+#'
+#' #' @section Replicates by nesting subfolders:
+#'
+#' Sample replicates are determined from the enclosed (child) folders. For example,
+#' in
+#'
+#' \preformatted{
+#' ../0_A1/1/targetfile
+#'        /2/targetfile
+#' ../0_A2/1/targetfile
+#' }
+#'
+#' the first pivot ("0_A1") contains two replicates, the second pivot ("0_A2") one.
+#'
+#' @return
+#' A tibble with the experiment layout as determined from the \code{paths}
+#' with columns
+#' \code{grp_0}, ..., \code{grp_N} specifiying the sample groups,
+#' \code{sub_1}, ..., \code{sub_N} specifiying the subfolder nesting,
+#' \code{pivot},
+#' \code{replicate} and \code{n_replicates}, based on \code{sub_1},
+#' the \code{path} of the file relative to \code{relative_to} and its original
+#' position in \code{paths} as \code{findex}.
+#'
+#' @examples
+#' get_layout_from_tree.maldi(c("folderA/0_A1/1/file.x", "folderA/0_A1/2/file.x",
+#'   "folderA/0_A2/1/file.x", "folderB/0_A1/1/file.x")
+#'
+#' @export
+import_layout_from_paths <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
+                                     relative_to = getwd()) {
+
+  require(dplyr, quietly = TRUE)
+
+  # this transforms both cases into a plain character vector, for which only the
+  # first element in a nested list will be kept
+
+  datad <- sapply(paths, "[[", 1) %>% normalizePath() %>%
+    tibble::as_tibble() %>%
+    # since levels of folder groups may be nested to different extents, split at
+    # the well folder using a look behind to preserve the well number
+    dplyr::mutate(pivot = stringr::str_extract(value, pivot)) %>%
+    tidyr::separate(value, into = c("V1", "V2"), sep = pivot) %>%
+    # remove trailing path separator which is not accepted under Windows
+    dplyr::mutate(V1 = stringr::str_replace(
+      string = V1, pattern = paste0(.Platform$file.sep, "$"), replacement = ""))
+
+  # this is critical
+
+  stopifnot(ncol(datad) == 3)
+
+  if (is.null(relative_to)) {
+
+    relative_to <- ""
+
+    # determine common basis and replace with "."
+
+    folderlist <- stringr::str_split(datad$V1, pattern = .Platform$file.sep,
+                                     simplify = TRUE)
+
+    foldersame <- apply(folderlist, MARGIN = 2, FUN = dplyr::n_distinct)
+
+    if (any(foldersame == 1)) {
+
+      foldersame <- folderlist[1, which(foldersame == 1)]
+
+      if (length(foldersame) > 0) relative_to <- paste0(foldersame, collapse = .Platform$file.sep)
+
+    }
+
+  }
+
+  if (relative_to != "") {
+
+    relative_to <- normalizePath(relative_to)
+
+    datad$V1 <- sapply(datad$V1, sub, pattern = relative_to,
+                       replacement = ".", fixed = TRUE)
+
+  }
+
+  datad <- datad %>%
+    dplyr::mutate(
+      nest_level = stringr::str_count(V1, pattern = .Platform$file.sep),
+      subs_level = stringr::str_count(V2, pattern = .Platform$file.sep)
+    ) %>%
+    # unnest the pivot groups
+    tidyr::separate(V1, into = paste0("grp_", 0:max(.$nest_level)),
+                    sep = .Platform$file.sep, fill = "right", extra = "drop",
+                    remove = FALSE) %>%
+    # unnest the pivot replicates
+    tidyr::separate(V2, into = c(NA, "sub_1", "V3"),
+                    sep = .Platform$file.sep, fill = "left", extra = "merge") %>%
+    tidyr::separate(V3, into = paste0("sub_", 2:max(.$subs_level)),
+                    sep = .Platform$file.sep, fill = "left", extra = "drop") %>%
+    # tidy
+    dplyr::mutate_all(list(~ na_if(., ""))) %>%
+    dplyr::rename(group = "V1") %>%
+    dplyr::rename(file  = paste0("sub_", max(.$subs_level))) %>%
+    # remove trailing path separators
+    dplyr::mutate(group = stringr::str_replace(group, paste0(.Platform$file.sep,
+                                                             "$"), "")) %>%
+    # add group-relative file path
+    dplyr::bind_cols(path = sapply(paths, function(x) x[[1]])) %>%
+    # preserve the file order index
+    dplyr::mutate(findex = dplyr::row_number()) %>%
+    # preserve the group index
+    dplyr::group_by(dplyr::across(tidyselect::starts_with("grp_"))) %>%
+    dplyr::mutate(gindex = dplyr::cur_group_id()) %>%
+    # sort by well in alphabetical order (in case needed); replicates are at
+    # level sub_1; if no subfolder exists, sub_1 will equal "file", which is
+    # acceptable
+    dplyr::arrange(pivot, sub_1, .by_group = TRUE) %>%
+    # group replicates per well
+    dplyr::group_by(pivot, .add = TRUE) %>%
+    # add replicate information
+    dplyr::mutate(replicate = sub_1,
+                  n_replicates = dplyr::n_distinct(replicate)) %>%
+    dplyr::group_by(replicate, .add = TRUE)
+
+  if (any(lengths(paths) > 1)) {
+
+    datad$n_replicates <- lengths(paths)
+    datad$replicate[which(lengths(paths) > 1)] <- NA
+    # not sure if this may cause complications later
+    datad$path <- paths
+
+  }
+
+  # if grp_0 is not the only group, drop it
+
+  if (max(datad$nest_level) > 1) {
+
+    datad <- datad %>% dplyr::ungroup(grp_0) %>% dplyr::select(-grp_0)
+
+  }
+
+  datad <- datad %>%
+    dplyr::select(!tidyselect::any_of(c("nest_level", "subs_level"))) %>%
+    dplyr::select(dplyr::group_vars(datad),
+                  tidyselect::any_of("n_replicates"),
+                  findex, gindex, tidyselect::everything())
+
+  attr(datad, "dir") <- relative_to
+
+  return(datad)
+
+}

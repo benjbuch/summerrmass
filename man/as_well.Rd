@@ -12,7 +12,9 @@ as_well(well, as.tibble = FALSE, to.upper = TRUE, zero.padding = 2)
 \item{as.tibble}{If \code{TRUE}, a \code{\link[dplyr:tibble]{tibble}} is
 returned instead of a list.}
 
-\item{max.digits}{Number of digits the well number should be padded to.}
+\item{to.upper}{Should well letters be converted to uppercase if they are not?}
+
+\item{zero.padding}{Number of digits the well number should be padded to.}
 }
 \value{
 A list with \code{well_let}, \code{well_num} and \code{well} or a
