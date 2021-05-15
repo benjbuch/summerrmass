@@ -104,12 +104,23 @@ log_debugging <- function(..., object = NULL) {
 
     fn_call <- match.call(call = sys.call(-1))[1L]
 
-    rlang::inform(message = rlang::format_error_bullets(
-      paste0(
-        "", fn_call, ": ", str_first_up(paste(...)), ".")
+    if (is.null(object)) {
+
+      rlang::inform(message = rlang::format_error_bullets(
+        paste0(
+          "", fn_call, ": ", str_first_up(paste(...)), ".")
       ))
 
-    if (!is.null(object)) print(object)
+    } else {
+
+      rlang::inform(message = rlang::format_error_bullets(
+        paste0(
+          "", fn_call, ": ", str_first_up(paste(...)))
+      ))
+
+      print(object)
+
+    }
 
   }
 
