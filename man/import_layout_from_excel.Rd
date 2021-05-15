@@ -41,7 +41,7 @@ assigned to each plate row.}
 \item{plate_ncol}{Number of columns to import starting from \code{data_upper_left}.}
 }
 \value{
-A \code{\link[tibble:tibble]{tibble}} in long form with the columsn \code{well},
+A \code{\link[tibble:tibble]{tibble}} in long form with the columns \code{well},
 \code{well_let} (letters, row index of the plate), \code{well_num} (integers
 as strings, column index of the plate), \code{content} and a column for each
 metadata specified.
