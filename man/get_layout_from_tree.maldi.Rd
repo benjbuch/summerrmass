@@ -55,3 +55,7 @@ Grouping allows to anaylze multiple directories simultaneously (with their own o
 a shared plate layout, see elsewhere).
 }
 
+\examples{
+get_layout_from_tree.maldi(c("folderA/0_A1/1/file.x", "folderA/0_A1/2/file.x",
+  "folderA/0_A2/1/file.x", "folderB/0_A1/1/file.x")
+}

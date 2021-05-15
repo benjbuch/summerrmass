@@ -46,6 +46,9 @@
 #' with columns \code{grp_0}, ..., \code{grp_N} specifiying the sample groups,
 #' \code{well}, \code{replicate}, \code{n_replicates}, \code{path}.
 #'
+#' @examples
+#' get_layout_from_tree.maldi(c("folderA/0_A1/1/file.x", "folderA/0_A1/2/file.x",
+#'   "folderA/0_A2/1/file.x", "folderB/0_A1/1/file.x")
 get_layout_from_tree.maldi <- function(file_list, well_folder = "[0-9]_(?=[A-Z]+[0-9]+)") {
 
   require(dplyr, quietly = TRUE)

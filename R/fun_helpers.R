@@ -1,3 +1,51 @@
+# ==== HELPERS ====
+
+#' Interpret characters as well names.
+#'
+#' @param well Character vector.
+#' @param as.tibble If \code{TRUE}, a \code{\link[dplyr:tibble]{tibble}} is
+#' returned instead of a list.
+#' @param max.digits Number of digits the well number should be padded to.
+#'
+#' @return A list with \code{well_let}, \code{well_num} and \code{well} or a
+#' tibble with the corresponding column names.
+#'
+#' @examples
+#' as_well(c("a1", "B2", "Q23"))
+#' as_well("23a")
+#' as_well("n_2")
+#'
+#' @export
+as_well <- function(well, as.tibble = FALSE, to.upper = TRUE, zero.padding = 2) {
+
+  well_raw <- stringr::str_extract(well, "[:alnum:]+")
+
+  well_num <- stringr::str_extract(well_raw, "[0-9]+")
+  well_let <- stringr::str_extract(well_raw, stringr::regex("[A-Z]+", ignore_case = TRUE))
+
+  defects <- mapply(function(x, y) any(is.na(x), is.na(y)), well_let, well_num)
+
+  if (to.upper == TRUE) well_let <- toupper(well_let)
+
+  well_num <- sprintf(paste0("%0", zero.padding, "d"), as.numeric(well_num))
+  well_tot <- paste0(well_let, well_num)
+
+  well_let[defects] <- NA_character_
+  well_num[defects] <- NA_character_
+  well_tot[defects] <- NA_character_
+
+  res <- list(well_let = well_let, well_num = well_num, well = well_tot)
+
+  if (as.tibble == TRUE) {
+
+    res <- dplyr::as_tibble(res)
+
+  }
+
+  return(res)
+
+}
+
 # ==== DIRECTORY NAVIGATION ====
 
 #' Express file paths in their canonical form. Truly.
@@ -199,7 +247,7 @@ select_single_file <- function(path = getwd(), prefix = "*.+", suffix = "*",
 
 # ==== GENERAL FILE IMPORT AND EXPORT ====
 
-#' Import a (plate) layout from Excel file.
+#' Import a (plate) layout from an Excel file.
 #'
 #' @param file A path or URL to an xlsx file or workbook.
 #' @inheritParams openxlsx::read.xlsx
