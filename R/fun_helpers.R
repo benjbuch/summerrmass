@@ -433,10 +433,17 @@ import_layout_from_excel <- function(
 #' grouping accordingly.
 #'
 #' If \code{pivot} is a regular expression with lookahead or lookbehind, these
-#' elements are kept
+#' elements are kept in the path.
 #'
-#' \code{relative_to} is (like all \code{paths}) expanded before being hidden.
-#' It is preserved as \code{attr(., "dir")} for future use.
+#' If \code{pivot} has multiple matches in the path, it is advisable to call this
+#' function with \code{relative_to = (common path)} since it will be removed from
+#' the paths before a match is sought for. Alternatively, \code{relative_to = NULL}
+#' will automatically consume the longest shared path between all \code{paths}.
+#'
+#' \code{relative_to} is expanded (like all \code{paths}) before the regular
+#' expression is looked for.
+#'
+#' \code{relative_to} is preserved as \code{attr(., "dir")} for future use.
 #'
 #' \subsection{Sample groups by nesting parent folders}{
 #'
@@ -502,18 +509,10 @@ import_layout_from_paths <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
   # first element in a nested list will be kept
 
   datad <- sapply(paths, "[[", 1) %>% normalizePath() %>%
-    tibble::as_tibble() %>%
-    # since levels of folder groups may be nested to different extents, split at
-    # the well folder using a look behind to preserve the well number
-    dplyr::mutate(pivot = stringr::str_extract(.data$value, pivot)) %>%
-    tidyr::separate(.data$value, into = c("V1", "V2"), sep = pivot) %>%
-    # remove trailing path separator which is not accepted under Windows
-    dplyr::mutate(V1 = stringr::str_remove(
-      string = .data$V1, pattern = paste0(.Platform$file.sep, "$")))
+    tibble::as_tibble()
 
-  # this is critical
-
-  stopifnot(ncol(datad) == 3)
+  # to avoid spurious matching of the regex to a common base directory, remove
+  # the relative portion first
 
   if (is.null(relative_to)) {
 
@@ -521,7 +520,7 @@ import_layout_from_paths <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
 
     # determine common basis and replace with "."
 
-    folderlist <- stringr::str_split(datad$V1, pattern = .Platform$file.sep,
+    folderlist <- stringr::str_split(datad$value, pattern = .Platform$file.sep,
                                      simplify = TRUE)
 
     foldersame <- apply(folderlist, MARGIN = 2, FUN = dplyr::n_distinct)
@@ -530,9 +529,17 @@ import_layout_from_paths <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
 
     if (any(foldersame == 1)) {
 
-      foldersame <- folderlist[1, which(foldersame == 1)]
+      # Note: Beware that which(foldersame == 1) may be true for elements after
+      # the pivot has been identified. This is why we do it more "complicated".
+      #
+      # Note: This will omit the last common element, which is intended in such
+      # cases in which also the pivot itself is identical for all elements (and
+      # only differences in replicates exist); such that it is not stripped off.
 
-      if (length(foldersame) > 0) relative_to <- paste0(foldersame, collapse = .Platform$file.sep)
+      foldersame <- folderlist[1, which(cumsum(abs(diff(foldersame))) == 0)]
+
+      if (length(foldersame) > 0) relative_to <- paste0(
+        foldersame, collapse = .Platform$file.sep)
 
     }
 
@@ -545,15 +552,24 @@ import_layout_from_paths <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
     # process the relative path in much the same way as V1 was processed
 
     relative_to <- normalizePath(relative_to)
-    relative_to <- stringr::str_remove(relative_to, pivot)
-    relative_to <- stringr::str_remove(relative_to, paste0(.Platform$file.sep, "$"))
 
-    datad$V1 <- sapply(datad$V1, sub, pattern = relative_to,
-                       replacement = ".", fixed = TRUE)
+    datad$value <- sapply(datad$value, sub, pattern = relative_to,
+                          replacement = ".", fixed = TRUE)
 
   }
 
   log_debugging("assessed paths relative to", sQuote(relative_to))
+
+  datad <- datad %>%
+    dplyr::mutate(pivot = stringr::str_extract(.data$value, pivot)) %>%
+    tidyr::separate(.data$value, into = c("V1", "V2"), sep = pivot) %>%
+    # remove trailing path separator which is not accepted under Windows
+    dplyr::mutate(V1 = stringr::str_remove(
+      string = .data$V1, pattern = paste0(.Platform$file.sep, "$")))
+
+  # this is critical
+
+  stopifnot(ncol(datad) == 3)
 
   datad <- datad %>%
     dplyr::mutate(
