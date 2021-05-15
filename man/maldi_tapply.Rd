@@ -36,10 +36,6 @@ separately.
 To establish the grouping, \code{INDEX} is used.
 
 \itemize{
-\item{If \code{INDEX} is a \code{\link[base:data.frame]{data.frame}} or a similar
-object such as a \code{\link[tibble:tibble]{tibble}}, the number and order of
-the rows must correspond to the number and order of the elements in \code{object}.
-}
 \item{If \code{INDEX} qualifies as list of \code{\link[base:factor]{factor}}s,
 each of the same length as \code{object}, this is used as grouping.
 }

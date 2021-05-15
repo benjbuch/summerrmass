@@ -26,7 +26,8 @@ import_layout_from_paths.maldi <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
 
   well_regex <- "[A-Z]+[0-9]+"
 
-  stopifnot(grepl(well_regex, x = pivot, fixed = TRUE))
+  stopifnot("Regular expression does not match [A-Z]+[0-9]+." = grepl(
+    well_regex, x = pivot, fixed = TRUE))
 
   datad <- import_layout_from_paths(paths = paths, pivot = pivot,
                                     relative_to = relative_to)
@@ -223,10 +224,6 @@ maldi_average_spectra <- function(object,
 #' To establish the grouping, \code{INDEX} is used.
 #'
 #' \itemize{
-#' \item{If \code{INDEX} is a \code{\link[base:data.frame]{data.frame}} or a similar
-#' object such as a \code{\link[tibble:tibble]{tibble}}, the number and order of
-#' the rows must correspond to the number and order of the elements in \code{object}.
-#' }
 #' \item{If \code{INDEX} qualifies as list of \code{\link[base:factor]{factor}}s,
 #' each of the same length as \code{object}, this is used as grouping.
 #' }
@@ -296,4 +293,194 @@ maldi_average_by_well <- function(object,
   data_mzxml
 
 }
+
+#' Extract intensities for given m/z values.
+#'
+#' @inheritParams maldi_get_paths
+#' @param mass_list Named list specifying the m/z at which to try extracting the
+#' intensity.
+#' @param tolerance_assignment Maximum difference between the calculated m/z and
+#' the mass at the detected peak m/z.
+#' @inheritParams MALDIquant::detectPeaks
+#' @param ... Further arguments passed to \code{\link[MALDIquant:detectPeaks]{MALDIquant::detectPeaks}}.
+#' @param manual Logical whether all peaks must be picked manually (\code{TRUE})
+#' or only in ambiguous cases (\code{FALSE}).
+#'
+#' @details
+#' Peaks are pre-selected froma smoothed spectrum within the m/z range given by
+#' \code{mass_list} and \code{tolerance_assignment}. Peaks are measured in the
+#' original, unsmoothed spectrum using \code{\link[MALDIquant:detectPeaks]{MALDIquant::detectPeaks}}.
+#'
+#' @importFrom magrittr %>%
+#' @importFrom rlang .data
+#'
+#' @examples
+#' my_masses <- c(ion_species_A = 2400, ion_species_B = 2500)
+#'
+#' @importFrom magrittr %>%
+#' @importFrom rlang .data
+#'
+#' @export
+maldi_peaks_by_well <- function(object,
+                                mass_list,
+                                tolerance_assignment = 0.5,
+                                method = "MAD",
+                                SNR = 3,
+                                ...,
+                                manual = FALSE) {
+
+  select_peaks_manually <- function(s0, s1, p1, cx, mx, tol = tolerance_assignment) {
+
+    # s0: spectrum as is, for plotting only
+    # s1: spectrum processed for peak detection, e.g. smoothed
+    # p1: list with peaks on s1
+    # mx: named list with masses to be assigned
+    # cx: named list with missing (NA) candidate peaks to be picked from
+
+    for (ci in which(is.na(cx))) {
+
+      MALDIquant::plot(s0, col = "lightgray")
+
+      graphics::points(MALDIquant::mass(s1), MALDIquant::intensity(s1),
+                         type = "l", col = "blue")
+      graphics::points(MALDIquant::mass(p1), MALDIquant::intensity(p1), col = "blue")
+
+      graphics::title(paste("Assign", names(cx)[ci], "peak"))
+      graphics::mtext("Hit 'Esc' when done or to skip.", line = 0.25, col = "lightgray")
+
+      graphics::abline(v = c(tol, -tol) + as.numeric(mx[ci]), lty = 2)
+
+      # graphics::axis(side = 1, at = c(tol, -tol) + as.numeric(mx[ci]),
+      #      labels = FALSE, col = "magenta", lwd = 0, lwd.ticks = 2, line = -.5)
+
+      graphics::identify(MALDIquant::mass(p1), MALDIquant::intensity(p1),
+                         plot = FALSE) -> new_point
+
+      if (length(new_point) > 0) {
+
+        graphics::points(MALDIquant::mass(p1)[new_point],
+                         MALDIquant::intensity(p1)[new_point],
+                         pch = 16, col = "blue")
+
+        graphics::mtext(paste0(
+          round(MALDIquant::mass(p1)[new_point], 2), " (",
+          round(as.numeric(mx[ci]), 2), ")"), side = 3, line = -1.5)
+
+        Sys.sleep(0.9)
+
+        cx[[ci]] <- MALDIquant::mass(p1)[new_point]
+
+      } else {
+
+        graphics::mtext("none assigned", side = 3, line = -1.5)
+
+      }
+
+    }
+
+    return(cx)
+
+  }
+
+  data_peaks.tmp <- list()
+
+  # proceed well by well now for peak detection and assignment
+
+  for (i in seq_along(object)) {
+
+    mass_spectrum <- object[[i]]
+
+    tryCatch({
+
+      spectra_smooth_fwhm <- mass_spectrum %>% MALDIquant::mass() %>%
+        diff %>% mean %>%
+        magrittr::divide_by(e1 = tolerance_assignment, e2 = .) %>%
+        floor()
+
+      suppressWarnings({
+
+        # warning is: 'Negative intensity values are replaced by zeros.'
+
+        smoo_spectrum <- mass_spectrum %>%
+          MALDIquant::smoothIntensity(
+            method = "SavitzkyGolay",
+            halfWindowSize = spectra_smooth_fwhm)
+
+      })
+
+      # browser()
+
+      smoo_peaks <- MALDIquant::detectPeaks(object = smoo_spectrum,
+                                            method = method, SNR = SNR, ...)
+
+      # preselect automatically or manually?
+
+      if (manual) {
+
+        smoo_list <- select_peaks_manually(
+          s0 = mass_spectrum,
+          s1 = smoo_spectrum,
+          p1 = smoo_peaks,
+          cx = rep(NA, length(mass_list)) %>% as.list() %>%
+            magrittr::set_names(names(mass_list)),
+          mx = mass_list
+        )
+
+      } else {
+
+        smoo_list <- sapply(mass_list, function(x) MALDIquant::mass(
+          smoo_peaks)[MALDIquant::match.closest(x, table = MALDIquant::mass(
+            smoo_peaks), tolerance = tolerance_assignment, nomatch = NA)])
+
+        if (any(is.na(smoo_list))) {
+
+          smoo_list <- select_peaks_manually(
+            s0 = mass_spectrum,
+            s1 = smoo_spectrum,
+            p1 = smoo_peaks,
+            cx = smoo_list,
+            mx = mass_list
+          )
+
+        }
+
+      }
+
+      peaks <- MALDIquant::detectPeaks(object = mass_spectrum,
+                                       method = "MAD", SNR = SNR, ...)
+
+      tmp.res <- sapply(smoo_list, MALDIquant::match.closest,
+                        table = MALDIquant::mass(peaks),
+                        tolerance = tolerance_assignment,
+                        nomatch = NA) %>%
+        tibble::as_tibble(rownames = "ion") %>%
+        dplyr::mutate(mass = MALDIquant::mass(peaks)[.data$value],
+                      intensity = MALDIquant::intensity(peaks)[.data$value]) %>%
+        dplyr::select(!.data$value)
+
+    }, error = function(e) {
+
+      log_message("failed peak detection for", sQuote(MALDIquant::metaData(object[[i]])$file))
+
+    })
+
+  }
+
+  maldi_get_paths(object) %>%
+    import_layout_from_paths.maldi(relative_to = attr(object, "dir")) %>%
+    dplyr::left_join(
+      data_peaks.tmp %>% dplyr::bind_rows(.id = "findex") %>%
+        dplyr::mutate(findex = as.integer(.data$findex)),
+      by = "findex") %>%
+    dplyr::mutate(ion = factor(.data$ion, levels = names(mass_list))) %>%
+    dplyr::mutate(percent = .data$intensity / sum(.data$intensity,
+                                                  na.rm = TRUE) * 100) %>%
+    dplyr::select(dplyr::group_vars(.),
+                  tidyselect::any_of(c("ion", "mass", "intensity", "percent",
+                                       "n_replicates", "findex", "gindex")),
+                  tidyselect::everything())
+
+}
+
+
 
