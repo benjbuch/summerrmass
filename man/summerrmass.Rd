@@ -27,7 +27,7 @@ summerrmass
 
 \link{import_layout_from_excel}
 
-\link{import_layout_form_paths}
+\link{import_layout_from_paths}
 
 } % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
