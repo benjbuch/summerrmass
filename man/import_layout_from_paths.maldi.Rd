@@ -31,6 +31,8 @@ measurements of the same well are grouped in subfolders such as "0_A1/1",
 \details{
 \code{pivot} must contain a regular expression to identify the well, i.e.,
 contain [A-Z]+[0-9]+".
+
+The resulting \link[dplyr:grouped_df]{grouped data frame} is grouped by \code{well}.
 }
 \seealso{
 \code{\link{import_layout_from_paths}}

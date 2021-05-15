@@ -47,10 +47,17 @@ the matched folder can differ from path to path; care is taken to handle the
 grouping accordingly.
 
 If \code{pivot} is a regular expression with lookahead or lookbehind, these
-elements are kept
+elements are kept in the path.
 
-\code{relative_to} is (like all \code{paths}) expanded before being hidden.
-It is preserved as \code{attr(., "dir")} for future use.
+If \code{pivot} has multiple matches in the path, it is advisable to call this
+function with \code{relative_to = (common path)} since it will be removed from
+the paths before a match is sought for. Alternatively, \code{relative_to = NULL}
+will automatically consume the longest shared path between all \code{paths}.
+
+\code{relative_to} is expanded (like all \code{paths}) before the regular
+expression is looked for.
+
+\code{relative_to} is preserved as \code{attr(., "dir")} for future use.
 
 \subsection{Sample groups by nesting parent folders}{
 

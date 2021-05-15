@@ -562,7 +562,7 @@ import_layout_from_paths <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
 
   datad <- datad %>%
     dplyr::mutate(pivot = stringr::str_extract(.data$value, pivot)) %>%
-    tidyr::separate(.data$value, into = c("V1", "V2"), sep = pivot) %>%
+    tidyr::separate(.data$value, into = c("V1", "V2"), sep = pivot, fill = "left") %>%
     # remove trailing path separator which is not accepted under Windows
     dplyr::mutate(V1 = stringr::str_remove(
       string = .data$V1, pattern = paste0(.Platform$file.sep, "$")))
@@ -571,19 +571,23 @@ import_layout_from_paths <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
 
   stopifnot(ncol(datad) == 3)
 
+  # browser()
+
   datad <- datad %>%
     dplyr::mutate(
       nest_level = stringr::str_count(.data$V1, pattern = .Platform$file.sep),
       subs_level = stringr::str_count(.data$V2, pattern = .Platform$file.sep)
     ) %>%
     # unnest the pivot groups
-    tidyr::separate(.data$V1, into = paste0("grp_", 0:max(.$nest_level)),
+    tidyr::separate(.data$V1, into = paste0("grp_", 0:max(c(0, .$nest_level),
+                                                          na.rm = TRUE)),
                     sep = .Platform$file.sep, fill = "right", extra = "drop",
                     remove = FALSE) %>%
     # unnest the pivot replicates
     tidyr::separate(.data$V2, into = c(NA, "sub_1", "V3"),
                     sep = .Platform$file.sep, fill = "left", extra = "merge") %>%
-    tidyr::separate(.data$V3, into = paste0("sub_", 2:max(.$subs_level)),
+    tidyr::separate(.data$V3, into = paste0("sub_", 2:max(c(2, .$subs_level),
+                                                          na.rm = TRUE)),
                     sep = .Platform$file.sep, fill = "left", extra = "drop") %>%
     # tidy
     dplyr::mutate_all(list(~ dplyr::na_if(., ""))) %>%
@@ -623,7 +627,7 @@ import_layout_from_paths <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
 
   # if grp_0 is not the only group, drop it
 
-  if (max(datad$nest_level) > 1) {
+  if (max(datad$nest_level, na.rm = TRUE) > 1) {
 
     datad <- datad %>% dplyr::ungroup(.data$grp_0) %>% dplyr::select(!.data$grp_0)
 
