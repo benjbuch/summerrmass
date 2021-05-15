@@ -4,7 +4,7 @@
 \alias{normalizePath}
 \title{Express file paths in their canonical form. Truly.}
 \usage{
-normalizePath(path, verbose = getOption("verbose"))
+normalizePath(path)
 }
 \arguments{
 \item{path}{A character vector of file paths.}

@@ -66,9 +66,7 @@ as_well <- function(well, as.tibble = FALSE, to.upper = TRUE, zero.padding = 2) 
 #'
 normalizePath <- function(path) {
 
-  if (getOption("verbose")) summer_message_debug(
-    getNamespaceName(environment(normalizePath)),
-    ":normalizePath received ", sQuote(path))
+  log_debugging("received", sQuote(path))
 
   norm_path <- stringr::str_replace(
     base::normalizePath(path, winslash = .Platform$file.sep, mustWork = FALSE),
@@ -76,9 +74,7 @@ normalizePath <- function(path) {
     pattern = paste0(.Platform$file.sep, "$"), replacement = ""
   )
 
-  if (getOption("verbose")) summer_message_debug(
-    getNamespaceName(environment(normalizePath)),
-    ":normalizePath returned '", sQuote(norm_path))
+  log_debugging("returned", sQuote(norm_path))
 
   norm_path
 
