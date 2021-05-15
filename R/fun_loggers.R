@@ -1,3 +1,7 @@
+#' Make first letter of a string uppercase
+#'
+#' @param x an string
+#' @noRd
 str_first_up <- function(x) {
 
   # Note: stringr::str_to_sentence messes up upper case letters in paths.
@@ -8,6 +12,10 @@ str_first_up <- function(x) {
 
 }
 
+#' Logging of tasks
+#'
+#' @param ... message
+#' @noRd
 log_task <- function(...) {
 
   if (getOption("log", default = TRUE)) {
@@ -20,6 +28,13 @@ log_task <- function(...) {
 
 }
 
+#' Logging of processes
+#'
+#' @description
+#' Sub-routines performed under the headline of the current task.
+#'
+#' @param ... message
+#' @noRd
 log_process <- function(...) {
 
   if (getOption("log", default = TRUE)) {
@@ -32,12 +47,23 @@ log_process <- function(...) {
 
 }
 
+#' Logging of process completion
+#'
+#' @param ... message
+#' @noRd
 log_done <- function() {
 
   log_process("done")
 
 }
 
+#' Logging of messages
+#'
+#' @description
+#' Anything else.
+#'
+#' @param ... message
+#' @noRd
 log_message <- function(...) {
 
   if (getOption("log", default = TRUE)) {
@@ -50,15 +76,29 @@ log_message <- function(...) {
 
 }
 
-log_error <- function(header, body) {
+#' Handling of errors
+#'
+#' @param header A concise description of the error.
+#' @param body A named character that indicates, e.g. which elements caused an
+#' error.
+#' @param ... Anything else passed to \code{\link[rlang:abort]{abort(...)}}.
+#' @noRd
+log_error <- function(header, body, ...) {
 
   rlang::abort(message = paste0(
     str_first_up(header), "\n",
-    rlang::format_error_bullets(body)))
+    rlang::format_error_bullets(body)), ...)
 
 }
 
-log_debugging <- function(...) {
+#' Logging for debugging
+#'
+#' @description
+#' Will print the function name it was invoked from.
+#'
+#' @param ... message
+#' @noRd
+log_debugging <- function(..., object = NULL) {
 
   if (getOption("debug", default = TRUE)) {
 
@@ -68,6 +108,8 @@ log_debugging <- function(...) {
       paste0(
         "", fn_call, ": ", str_first_up(paste(...)), ".")
       ))
+
+    if (!is.null(object)) print(object)
 
   }
 

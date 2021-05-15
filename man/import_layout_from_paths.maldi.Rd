@@ -11,7 +11,7 @@ import_layout_from_paths.maldi(
 )
 }
 \arguments{
-\item{paths}{A list character vector or list of file paths. See Details}
+\item{paths}{A list character vector or list of file paths. See Details.}
 
 \item{pivot}{A \link[base:regex]{regular expression} describing the
 name of a single folder in each tree up to which "groups" and from which

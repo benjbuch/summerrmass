@@ -25,6 +25,13 @@ working directory, \code{\link[base]{getwd}()}. Tilde expansion (see \code{
 
 \item{pattern}{A \link[base:regex]{regular expression}. Only file names which
 match the regular expression will be returned.}
+
+\item{filetype}{A human-readable file type designation. Along with \code{suffix}
+will be used to construct \code{filter} in \code{\link[rstudioapi:selectFile]{rstudioapi::selectFile}}.}
+
+\item{caption}{The window title.}
+
+\item{label}{The label to use for the 'Accept' / 'OK' button.}
 }
 \value{
 A character vector with a single element in case a single file matches \code{pattern}

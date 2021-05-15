@@ -13,6 +13,10 @@ select_directory(
 \arguments{
 \item{path}{A character vector of length 1 to start browsing; defaults to the
 current working directory.}
+
+\item{caption}{The window title.}
+
+\item{label}{The label to use for the 'Accept' / 'OK' button.}
 }
 \value{
 A character with the path of the chosen directory.

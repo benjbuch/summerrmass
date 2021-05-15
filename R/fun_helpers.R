@@ -1,5 +1,7 @@
 #  HELPERS ---------------------------------------------------------------------
 
+utils::globalVariables(".")
+
 #' Interpret characters as well names.
 #'
 #' @param well Character vector.
@@ -126,6 +128,7 @@ select_from_list <- function(items, caption = "Select an item") {
 #'
 #' @param path A character vector of length 1 to start browsing; defaults to the
 #' current working directory.
+#' @inheritParams rstudioapi::selectDirectory
 #'
 #' @return
 #' A character with the path of the chosen directory.
@@ -172,6 +175,9 @@ select_directory <- function(path = getwd(), caption = "Select a directory",
 #' match the regular expression will be returned.
 #' @param prefix A regular expression to match the filename (without extension).
 #' @param suffix A character to match the file extension, e.g. "csv".
+#' @param filetype A human-readable file type designation. Along with \code{suffix}
+#' will be used to construct \code{filter} in \code{\link[rstudioapi:selectFile]{rstudioapi::selectFile}}.
+#' @inheritParams rstudioapi::selectDirectory
 #'
 #' @details
 #' In case multiple files are found, the user is prompted to choose one option
@@ -297,6 +303,9 @@ select_single_file <- function(path = getwd(), prefix = "*.+", suffix = "*",
 #'   # missing values are "NA", the order in meta_col determines the column arrangement
 #'   meta_col = c(Source = "AA", Duplicates = "Z"))
 #'
+#' @importFrom magrittr %>%
+#' @importFrom rlang .data
+#'
 #' @export
 import_layout_from_excel <- function(
   file,
@@ -309,8 +318,6 @@ import_layout_from_excel <- function(
   plate_nrow = 16,
   plate_ncol = 24
 ) {
-
-  require(dplyr, quietly = TRUE)
 
   # convert excel coordinates to R coordinates
 
@@ -360,10 +367,13 @@ import_layout_from_excel <- function(
     #
     tibble::as_tibble(rownames = "well_let") %>%
     # make sure all entries (including NA) are of type character
-    dplyr::mutate(across(where(is.numeric), as.character)) %>%
+    dplyr::mutate(dplyr::across(tidyselect::vars_select_helpers$where(is.numeric),
+                                as.character)) %>%
     # make long form
-    tidyr::pivot_longer(cols = -well_let, names_to = "well_num", values_to = "content") %>%
-    tidyr::unite(well_let, well_num, col = "well", sep = "", remove = FALSE)
+    tidyr::pivot_longer(cols = -.data$well_let, names_to = "well_num",
+                        values_to = "content") %>%
+    tidyr::unite(.data$well_let, .data$well_num, col = "well", sep = "",
+                 remove = FALSE)
 
   # for each metadata row or column we assume that it is parallel to the plate
 
@@ -384,12 +394,12 @@ import_layout_from_excel <- function(
 
   if (length(meta_row) > 0) datap <- dplyr::left_join(datap, dplyr::bind_rows(lapply(
     as.list(meta_row), get_meta_row), .id = "mtype") %>%
-      tidyr::pivot_wider(id_cols = "well_num", names_from = mtype, values_from = meta),
+      tidyr::pivot_wider(id_cols = "well_num", names_from = .data$mtype, values_from = .data$meta),
     by = "well_num")
 
   if (length(meta_col) > 0) datap <- dplyr::left_join(datap, dplyr::bind_rows(lapply(
     as.list(meta_col), get_meta_col), .id = "mtype") %>%
-      tidyr::pivot_wider(id_cols = "well_let", names_from = mtype, values_from = meta),
+      tidyr::pivot_wider(id_cols = "well_let", names_from = .data$mtype, values_from = .data$meta),
     by = "well_let")
 
   attr(datap, "file") <- file
@@ -404,7 +414,7 @@ import_layout_from_excel <- function(
 #' identical names. Given a list of paths pointing to those files, the layout
 #' of the experiment is established from the nesting of folders.
 #'
-#' @param paths A list character vector or list of file paths. See Details
+#' @param paths A list character vector or list of file paths. See Details.
 #' @param pivot A \link[base:regex]{regular expression} describing the
 #' name of a single folder in each tree up to which "groups" and from which
 #' "replicates" are established. See Details.
@@ -479,13 +489,14 @@ import_layout_from_excel <- function(
 #'
 #' @examples
 #' import_layout_from_paths(c("folderA/0_A1/1/file.x", "folderA/0_A1/2/file.x",
-#'   "folderA/0_A2/1/file.x", "folderB/0_A1/1/file.x")
+#'   "folderA/0_A2/1/file.x", "folderB/0_A1/1/file.x"))
+#'
+#' @importFrom magrittr %>%
+#' @importFrom rlang .data
 #'
 #' @export
 import_layout_from_paths <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
                                      relative_to = getwd()) {
-
-  require(dplyr, quietly = TRUE)
 
   # this transforms both cases into a plain character vector, for which only the
   # first element in a nested list will be kept
@@ -494,11 +505,11 @@ import_layout_from_paths <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
     tibble::as_tibble() %>%
     # since levels of folder groups may be nested to different extents, split at
     # the well folder using a look behind to preserve the well number
-    dplyr::mutate(pivot = stringr::str_extract(value, pivot)) %>%
-    tidyr::separate(value, into = c("V1", "V2"), sep = pivot) %>%
+    dplyr::mutate(pivot = stringr::str_extract(.data$value, pivot)) %>%
+    tidyr::separate(.data$value, into = c("V1", "V2"), sep = pivot) %>%
     # remove trailing path separator which is not accepted under Windows
-    dplyr::mutate(V1 = stringr::str_replace(
-      string = V1, pattern = paste0(.Platform$file.sep, "$"), replacement = ""))
+    dplyr::mutate(V1 = stringr::str_remove(
+      string = .data$V1, pattern = paste0(.Platform$file.sep, "$")))
 
   # this is critical
 
@@ -515,6 +526,8 @@ import_layout_from_paths <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
 
     foldersame <- apply(folderlist, MARGIN = 2, FUN = dplyr::n_distinct)
 
+    # browser()
+
     if (any(foldersame == 1)) {
 
       foldersame <- folderlist[1, which(foldersame == 1)]
@@ -527,34 +540,42 @@ import_layout_from_paths <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
 
   if (relative_to != "") {
 
+    # browser()
+
+    # process the relative path in much the same way as V1 was processed
+
     relative_to <- normalizePath(relative_to)
+    relative_to <- stringr::str_remove(relative_to, pivot)
+    relative_to <- stringr::str_remove(relative_to, paste0(.Platform$file.sep, "$"))
 
     datad$V1 <- sapply(datad$V1, sub, pattern = relative_to,
                        replacement = ".", fixed = TRUE)
 
   }
 
+  log_debugging("assessed paths relative to", sQuote(relative_to))
+
   datad <- datad %>%
     dplyr::mutate(
-      nest_level = stringr::str_count(V1, pattern = .Platform$file.sep),
-      subs_level = stringr::str_count(V2, pattern = .Platform$file.sep)
+      nest_level = stringr::str_count(.data$V1, pattern = .Platform$file.sep),
+      subs_level = stringr::str_count(.data$V2, pattern = .Platform$file.sep)
     ) %>%
     # unnest the pivot groups
-    tidyr::separate(V1, into = paste0("grp_", 0:max(.$nest_level)),
+    tidyr::separate(.data$V1, into = paste0("grp_", 0:max(.$nest_level)),
                     sep = .Platform$file.sep, fill = "right", extra = "drop",
                     remove = FALSE) %>%
     # unnest the pivot replicates
-    tidyr::separate(V2, into = c(NA, "sub_1", "V3"),
+    tidyr::separate(.data$V2, into = c(NA, "sub_1", "V3"),
                     sep = .Platform$file.sep, fill = "left", extra = "merge") %>%
-    tidyr::separate(V3, into = paste0("sub_", 2:max(.$subs_level)),
+    tidyr::separate(.data$V3, into = paste0("sub_", 2:max(.$subs_level)),
                     sep = .Platform$file.sep, fill = "left", extra = "drop") %>%
     # tidy
-    dplyr::mutate_all(list(~ na_if(., ""))) %>%
+    dplyr::mutate_all(list(~ dplyr::na_if(., ""))) %>%
     dplyr::rename(group = "V1") %>%
     dplyr::rename(file  = paste0("sub_", max(.$subs_level))) %>%
     # remove trailing path separators
-    dplyr::mutate(group = stringr::str_replace(group, paste0(.Platform$file.sep,
-                                                             "$"), "")) %>%
+    dplyr::mutate(group = stringr::str_replace(.data$group, paste0(.Platform$file.sep,
+                                                                   "$"), "")) %>%
     # add group-relative file path
     dplyr::bind_cols(path = sapply(paths, function(x) x[[1]])) %>%
     # preserve the file order index
@@ -565,13 +586,15 @@ import_layout_from_paths <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
     # sort by well in alphabetical order (in case needed); replicates are at
     # level sub_1; if no subfolder exists, sub_1 will equal "file", which is
     # acceptable
-    dplyr::arrange(pivot, sub_1, .by_group = TRUE) %>%
+    dplyr::arrange(.data$pivot, .data$sub_1, .by_group = TRUE) %>%
     # group replicates per well
-    dplyr::group_by(pivot, .add = TRUE) %>%
+    dplyr::group_by(.data$pivot, .add = TRUE) %>%
     # add replicate information
-    dplyr::mutate(replicate = sub_1,
-                  n_replicates = dplyr::n_distinct(replicate)) %>%
-    dplyr::group_by(replicate, .add = TRUE)
+    dplyr::mutate(replicate = .data$sub_1,
+                  n_replicates = dplyr::n_distinct(.data$replicate)) %>%
+    dplyr::group_by(.data$replicate, .add = TRUE)
+
+  log_debugging(object = datad)
 
   if (any(lengths(paths) > 1)) {
 
@@ -586,7 +609,7 @@ import_layout_from_paths <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
 
   if (max(datad$nest_level) > 1) {
 
-    datad <- datad %>% dplyr::ungroup(grp_0) %>% dplyr::select(-grp_0)
+    datad <- datad %>% dplyr::ungroup(.data$grp_0) %>% dplyr::select(!.data$grp_0)
 
   }
 
@@ -594,7 +617,7 @@ import_layout_from_paths <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
     dplyr::select(!tidyselect::any_of(c("nest_level", "subs_level"))) %>%
     dplyr::select(dplyr::group_vars(datad),
                   tidyselect::any_of("n_replicates"),
-                  findex, gindex, tidyselect::everything())
+                  .data$findex, .data$gindex, tidyselect::everything())
 
   attr(datad, "dir") <- relative_to
 

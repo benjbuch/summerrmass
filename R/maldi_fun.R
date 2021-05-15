@@ -16,10 +16,11 @@
 #'
 #' @seealso \code{\link{import_layout_from_paths}}
 #'
+#' @importFrom magrittr %>%
+#' @importFrom rlang .data
+#'
 import_layout_from_paths.maldi <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
                                            relative_to = getwd()) {
-
-  require(dplyr, quietly = TRUE)
 
   well_regex <- "[A-Z]+[0-9]+"
 
@@ -30,7 +31,7 @@ import_layout_from_paths.maldi <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
 
   datam <- dplyr::mutate(datad, as_well(stringr::str_extract(pivot, well_regex),
                                         as.tibble = TRUE)) %>%
-    dplyr::arrange(well, sub_1, .by_group = TRUE)
+    dplyr::arrange(.data$well, .data$sub_1, .by_group = TRUE)
 
   attr(datam, "dir") <- attr(datad, "dir")
 
@@ -40,7 +41,7 @@ import_layout_from_paths.maldi <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
 
 #' Import all MALDI spectra from a directory.
 #'
-#' Calls \link[MALDIquantForeign:MALDIquantForeign]{MALDIquantForeign} to scan
+#' Calls \link[MALDIquantForeign:MALDIquantForeign-package]{MALDIquantForeign} to scan
 #' a directory for MALDI spectra, import them, and perform intial qualtiy control.
 #'
 #' @details
@@ -56,8 +57,10 @@ import_layout_from_paths.maldi <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
 #' A \code{list} of \code{\link[MALDIquant:MassSpectrum-class]{MassSpectrum}}
 #' objects. The scanned path is preserved as \code{attr(., "dir")}.
 #'
+#' @importFrom rlang .data
+#'
 #' @export
-import_maldi_spectra <- function(path = getwd(), ...) {
+maldi_import_spectra <- function(path = getwd(), ...) {
 
   # make sure to re-enter the current working directory if anything goes wrong
 
@@ -143,4 +146,65 @@ import_maldi_spectra <- function(path = getwd(), ...) {
 
 }
 
+#  PROCESSING MASS SPECTRA -----------------------------------------------------
 
+#' Align and average MALDI spectra over repeated same-well measurements
+#'
+#' @param object A list of \code{\link[MALDIquant:MassSpectrum-class]{MassSpectrum}}.
+#' @param method_baseline Method for background subtraction.
+#' See \link[MALDIquant:removeBaseline]{MALDIquant::removeBaseline}.
+#' @param method_average Method to average replicate measurements.
+#' See \link[MALDIquant:averageMassSpectra]{MALDIquant::averageMassSpectra}.
+#' @param final_trim_range A numeric vector from which the maximum and the minimum
+#' value are taken to trim the spectrum to a relevant range.
+#' @param ... further arguments passed to \code{\link[MALDIquant:alignSpectra]{alignSpectra}}
+#'
+#' @importFrom magrittr %>%
+#' @importFrom rlang .data
+#'
+#' @export
+maldi_align_by_well <- function(object,
+                                method_baseline = "SNIP",
+                                method_average  = "mean",
+                                ...,
+                                final_trim_range = c(0, Inf)) {
+
+  log_process("pre-processing spectra by well")
+
+
+  relative_to <- attr(object, "dir")
+
+  if (is.null(relative_to)) relative_to <- getwd()
+
+  object %>% {tapply(., sapply(., function(x) MALDIquant::metaData(x)$file,
+                               USE.NAMES = FALSE) %>%
+                       import_layout_from_paths.maldi(relative_to = relative_to) %>%
+                       # this is important to pass the grouping index along the
+                       # order of the MassSpectrum list
+                       dplyr::arrange(.data$well) %>%
+                       # average by repeated measurements
+                       dplyr::ungroup(.data$replicate) %>%
+                       # use groups to process by wells
+                       dplyr::group_indices(), function(y) {
+
+                         y  %>%
+                           # remove baseline
+                           MALDIquant::removeBaseline(
+                             method = "SNIP") %>%
+                           # align spectra in case of repeated measurements ...
+                           MALDIquant::alignSpectra(...) %>%
+                           # ... and average them
+                           MALDIquant::averageMassSpectra(
+                             method = method_average) %>%
+                           # trim spectra
+                           MALDIquant::trim(range = final_trim_range)
+
+                       })} -> data_mzxml
+
+  log_done()
+
+  attr(data_mzxml, "dir") <- attr(object, "dir")
+
+  data_mzxml
+
+}
