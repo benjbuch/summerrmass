@@ -282,7 +282,7 @@ select_single_file <- function(path = getwd(), prefix = "*.+", suffix = "*",
 #' \figure{platelayout_maldi.png}{options: width=600 alt="A sample plate layout provided in \code{summerrmass}."}
 #'
 #' @return
-#' A \code{\link[tibble:tibble]{tibble}} in long form with the columsn \code{well},
+#' A \code{\link[tibble:tibble]{tibble}} in long form with the columns \code{well},
 #' \code{well_let} (letters, row index of the plate), \code{well_num} (integers
 #' as strings, column index of the plate), \code{content} and a column for each
 #' metadata specified.
