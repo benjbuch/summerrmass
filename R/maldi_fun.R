@@ -154,6 +154,7 @@ maldi_import_spectra <- function(path = getwd(), ...) {
 #'
 #' @param object A (list of) \code{\link[MALDIquant:MassSpectrum-class]{MassSpectrum}}.
 #'
+#' @export
 maldi_get_paths <- function(object) {
 
   sapply(object, function(x) MALDIquant::metaData(x)$file, USE.NAMES = FALSE)

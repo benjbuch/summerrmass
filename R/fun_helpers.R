@@ -644,3 +644,42 @@ import_layout_from_paths <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
   datad
 
 }
+
+#' Display a layout with ggplot2
+#'
+#' The function returns the basic layer to be modified with further geoms by
+#' the user, depending on the purpose.
+#'
+#' @param layout A plate layout.
+#' @param ... Arguments passed to the \code{\link[ggplot2:geom_tile]{ggplot2::geom_tile()}}
+#' aesthetic.
+#'
+#' @examples
+#' library(ggplot2)
+#'
+#' layout_file <- system.file("extdata", "platelayout_maldi.xlsx", package = "summerrmass")
+#'
+#' plate_384 <- import_layout_from_excel(layout_file, meta_row = c(Concentration = 1))
+#' display_plate_layout(plate_384)  # all defined wells
+#' display_plate_layout(plate_384, fill = content)
+#' display_plate_layout(plate_384, fill = as.numeric(Concentration))
+#' display_plate_layout(plate_384, fill = content, alpha = as.numeric(Concentration)) +
+#'   labs(alpha = "concentration")
+#'
+#' @importFrom rlang .data
+#'
+#' @export
+display_plate_layout <- function(layout, ...) {
+
+  ggplot2::ggplot(layout, ggplot2::aes(x = .data$well_num, y = forcats::fct_rev(.data$well_let))) +
+    ggplot2::geom_tile(ggplot2::aes(...)) +
+    ggplot2::coord_fixed() +
+    ggplot2::theme_minimal() + ggplot2::theme(
+      axis.title = ggplot2::element_blank(),
+      panel.grid = ggplot2::element_blank(),
+      legend.box = "vertical",
+      legend.box.just = "left",
+      legend.position = "bottom"
+    )
+
+}

@@ -25,6 +25,8 @@ Imports:
     tidyr,
     tidyselect,
     tibble,
+    ggplot2,
+    forcats,
     magrittr,
     openxlsx,
     MALDIquant,
