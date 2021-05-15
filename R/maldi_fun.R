@@ -1,4 +1,4 @@
-# ==== FILE IMPORT AND EXPORT ====
+# FILE IMPORT AND EXPORT -------------------------------------------------------
 
 #' Establish the experiment layout from nested directories for MALDI analyses.
 #'
@@ -15,7 +15,6 @@
 #' contain [A-Z]+[0-9]+".
 #'
 #' @seealso \code{\link{import_layout_from_paths}}
-#'
 #'
 import_layout_from_paths.maldi <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
                                            relative_to = getwd()) {
@@ -103,8 +102,7 @@ import_maldi_spectra <- function(path = getwd(), ...) {
 
   # processing of mzXML spectra
 
-  log_task("scanning ", sQuote(path), " for mzXML mass spectra")
-  log_process("this might take a while")
+  log_task("scanning", sQuote(path), "for mzXML mass spectra. This might take a while")
 
   suppressMessages({
 
@@ -144,3 +142,5 @@ import_maldi_spectra <- function(path = getwd(), ...) {
   data_mzxml
 
 }
+
+

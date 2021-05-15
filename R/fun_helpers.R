@@ -1,4 +1,4 @@
-# ==== HELPERS ====
+#  HELPERS ---------------------------------------------------------------------
 
 #' Interpret characters as well names.
 #'
@@ -47,7 +47,7 @@ as_well <- function(well, as.tibble = FALSE, to.upper = TRUE, zero.padding = 2) 
 
 }
 
-# ==== DIRECTORY NAVIGATION ====
+#  DIRECTORY NAVIGATION --------------------------------------------------------
 
 #' Express file paths in their canonical form. Truly.
 #'
@@ -243,7 +243,7 @@ select_single_file <- function(path = getwd(), prefix = "*.+", suffix = "*",
 
 }
 
-# ==== GENERAL FILE IMPORT AND EXPORT ====
+#  GENERAL FILE IMPORT AND EXPORT ----------------------------------------------
 
 #' Import a (plate) layout from an Excel file.
 #'
