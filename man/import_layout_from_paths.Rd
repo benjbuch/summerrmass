@@ -24,7 +24,7 @@ that is common in all elements of \code{paths}.}
 \value{
 A tibble with the experiment layout as determined from the \code{paths}
 with columns
-\code{grp_0}, ..., \code{grp_N} specifiying the sample groups,
+\code{grp_N}, ..., \code{grp_0} specifiying the sample groups,
 \code{sub_1}, ..., \code{sub_N} specifiying the subfolder nesting,
 \code{pivot},
 \code{replicate} and \code{n_replicates}, based on \code{sub_1},
@@ -99,7 +99,11 @@ the first pivot ("0_A1") contains two replicates, the second pivot ("0_A2") one.
 } % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 }
 \examples{
-import_layout_from_paths(c("folderA/0_A1/1/file.x", "folderA/0_A1/2/file.x",
-  "folderA/0_A2/1/file.x", "folderB/0_A1/1/file.x"))
+demo_paths <- c("folderA/0_A1/1/file.x", "folderA/0_A1/2/file.x",
+  "folderA/0_A2/1/file.x", "folderB/0_A1/1/file.x")
+import_layout_from_paths(demo_paths, relative_to = NULL)
+import_layout_from_paths(paste0("folderX/", demo_paths), relative_to = NULL)
+import_layout_from_paths(paste0("folderX/", demo_paths[1:2]), relative_to = NULL)
+import_layout_from_paths(paste0("folderY/folderX/", demo_paths), relative_to = NULL)
 
 }

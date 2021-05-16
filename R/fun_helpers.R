@@ -487,7 +487,7 @@ import_layout_from_excel <- function(
 #' @return
 #' A tibble with the experiment layout as determined from the \code{paths}
 #' with columns
-#' \code{grp_0}, ..., \code{grp_N} specifiying the sample groups,
+#' \code{grp_N}, ..., \code{grp_0} specifiying the sample groups,
 #' \code{sub_1}, ..., \code{sub_N} specifiying the subfolder nesting,
 #' \code{pivot},
 #' \code{replicate} and \code{n_replicates}, based on \code{sub_1},
@@ -495,8 +495,12 @@ import_layout_from_excel <- function(
 #' position in \code{paths} as \code{findex}.
 #'
 #' @examples
-#' import_layout_from_paths(c("folderA/0_A1/1/file.x", "folderA/0_A1/2/file.x",
-#'   "folderA/0_A2/1/file.x", "folderB/0_A1/1/file.x"))
+#' demo_paths <- c("folderA/0_A1/1/file.x", "folderA/0_A1/2/file.x",
+#'   "folderA/0_A2/1/file.x", "folderB/0_A1/1/file.x")
+#' import_layout_from_paths(demo_paths, relative_to = NULL)
+#' import_layout_from_paths(paste0("folderX/", demo_paths), relative_to = NULL)
+#' import_layout_from_paths(paste0("folderX/", demo_paths[1:2]), relative_to = NULL)
+#' import_layout_from_paths(paste0("folderY/folderX/", demo_paths), relative_to = NULL)
 #'
 #' @importFrom magrittr %>%
 #' @importFrom rlang .data
@@ -505,14 +509,34 @@ import_layout_from_excel <- function(
 import_layout_from_paths <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
                                      relative_to = getwd()) {
 
-  # this transforms both cases into a plain character vector, for which only the
-  # first element in a nested list will be kept
+  grp_prefix <- "grp_"
+  sub_prefix <- "sub_"
 
-  datad <- sapply(paths, "[[", 1) %>% normalizePath() %>%
-    tibble::as_tibble()
+  usr.relative_to <- relative_to  # store user argument
 
-  # to avoid spurious matching of the regex to a common base directory, remove
-  # the relative portion first
+  internal_path_cleanup <- function(p) {
+
+    # Globally, we do not alter the file paths provided, but internally we
+    # must create some common ground since occasionally, we may receive mixed
+    # path arguments.
+    #
+    # - paths are "normalized"
+    # - paths do not start with "/" (which they may of course usually do)
+
+    stringr::str_remove(string = normalizePath(p),
+                        pattern = paste0("^", .Platform$file.sep))
+
+  }
+
+  # only keep the first element if this was a nested list to # transform paths
+  # into a plain character vector
+
+  first_paths <- sapply(paths, "[[", 1)
+
+  datad <- tibble::as_tibble(internal_path_cleanup(first_paths))
+
+  # To avoid spurious matching of the regex to a common base directory, remove
+  # the common path first.
 
   if (is.null(relative_to)) {
 
@@ -523,20 +547,24 @@ import_layout_from_paths <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
     folderlist <- stringr::str_split(datad$value, pattern = .Platform$file.sep,
                                      simplify = TRUE)
 
+    log_debugging("initial folder list", object = folderlist)
+
     foldersame <- apply(folderlist, MARGIN = 2, FUN = dplyr::n_distinct)
 
     # browser()
 
-    if (any(foldersame == 1)) {
+    if (foldersame[1] == 1) {
 
-      # Note: Beware that which(foldersame == 1) may be true for elements after
-      # the pivot has been identified. This is why we do it more "complicated".
+      # Beware that which(foldersame == 1) may be true for elements after the
+      # pivot has been identified. This is why we do it more "complicated".
       #
-      # Note: This will omit the last common element, which is intended in such
-      # cases in which also the pivot itself is identical for all elements (and
-      # only differences in replicates exist); such that it is not stripped off.
+      # We omit the last common element to account for such cases in which also
+      # the pivot itself is identical for all elements (and only differences in
+      # the replicates exist).
 
       foldersame <- folderlist[1, which(cumsum(abs(diff(foldersame))) == 0)]
+
+      log_debugging("common folder list", object = foldersame)
 
       if (length(foldersame) > 0) relative_to <- paste0(
         foldersame, collapse = .Platform$file.sep)
@@ -549,95 +577,106 @@ import_layout_from_paths <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
 
     # browser()
 
-    # process the relative path in much the same way as V1 was processed
+    relative_to <- internal_path_cleanup(relative_to)
 
-    relative_to <- normalizePath(relative_to)
+    # The "." will designate the common path designated by the user as input
+    # or identified as topmost shared directory. If there is no ".", there are
+    # no common directories.
 
     datad$value <- sapply(datad$value, sub, pattern = relative_to,
-                          replacement = ".", fixed = TRUE)
+                          replacement = "", fixed = TRUE)
 
   }
 
   log_debugging("assessed paths relative to", sQuote(relative_to))
 
+  # V1: grp parts
+  # V2: sub parts (or pivot in cases where fill = "left")
+
   datad <- datad %>%
     dplyr::mutate(pivot = stringr::str_extract(.data$value, pivot)) %>%
-    tidyr::separate(.data$value, into = c("V1", "V2"), sep = pivot, fill = "left") %>%
-    # remove trailing path separator which is not accepted under Windows
-    dplyr::mutate(V1 = stringr::str_remove(
-      string = .data$V1, pattern = paste0(.Platform$file.sep, "$")))
-
-  # this is critical
-
-  stopifnot(ncol(datad) == 3)
+    tidyr::separate(.data$value, into = c("V1", "V2"), sep = pivot, fill = "left")
 
   # browser()
 
   datad <- datad %>%
+    # Remove trailing path separator as we do not count "empty" directories; the
+    # grp parts then look like "dir1/dir2/dir3" of which the leftmost may be
+    # shared across all observations.
+    dplyr::mutate(V1 = internal_path_cleanup(V1)) %>%
     dplyr::mutate(
-      nest_level = stringr::str_count(.data$V1, pattern = .Platform$file.sep),
+      grps_level = stringr::str_count(.data$V1, pattern = .Platform$file.sep),
       subs_level = stringr::str_count(.data$V2, pattern = .Platform$file.sep)
     ) %>%
-    # unnest the pivot groups
-    tidyr::separate(.data$V1, into = paste0("grp_", 0:max(c(0, .$nest_level),
-                                                          na.rm = TRUE)),
-                    sep = .Platform$file.sep, fill = "right", extra = "drop",
+    # unnest the groups: X X grp_N ... grp_0 (pivot)
+    tidyr::separate(.data$V1, into = paste0(grp_prefix, seq(max(c(0, .$grps_level),
+                                                                na.rm = TRUE), 0)),
+                    sep = .Platform$file.sep, fill = "left", extra = "drop",
                     remove = FALSE) %>%
-    # unnest the pivot replicates
-    tidyr::separate(.data$V2, into = c(NA, "sub_1", "V3"),
+    # unnest the replicates: (pivot) sub_1 X X sub_2 ... sub_N (= file)
+    tidyr::separate(.data$V2, into = c(NA, paste0(sub_prefix, "1"), "V3"),
                     sep = .Platform$file.sep, fill = "left", extra = "merge") %>%
-    tidyr::separate(.data$V3, into = paste0("sub_", 2:max(c(2, .$subs_level),
-                                                          na.rm = TRUE)),
+    tidyr::separate(.data$V3, into = paste0(sub_prefix, seq(2, max(c(2, .$subs_level),
+                                                                   na.rm = TRUE))),
                     sep = .Platform$file.sep, fill = "left", extra = "drop") %>%
-    # tidy
-    dplyr::mutate_all(list(~ dplyr::na_if(., ""))) %>%
+    # process data
     dplyr::rename(group = "V1") %>%
-    dplyr::rename(file  = paste0("sub_", max(.$subs_level))) %>%
+    dplyr::rename(file  = paste0(sub_prefix, max(.$subs_level))) %>%
     # remove trailing path separators
     dplyr::mutate(group = stringr::str_replace(.data$group, paste0(.Platform$file.sep,
                                                                    "$"), "")) %>%
-    # add group-relative file path
-    dplyr::bind_cols(path = sapply(paths, function(x) x[[1]])) %>%
+    # add file paths as provided by the user as long as the table is in the
+    # order corresponding to the original argument
+    dplyr::mutate(path_to_files = paths) %>%
+    dplyr::mutate(path_to_group = stringr::str_extract(first_paths, paste0(
+      "^.*?", group))) %>%
     # preserve the file order index
-    dplyr::mutate(findex = dplyr::row_number()) %>%
-    # preserve the group index
-    dplyr::group_by(dplyr::across(tidyselect::starts_with("grp_"))) %>%
-    dplyr::mutate(gindex = dplyr::cur_group_id()) %>%
-    # sort by well in alphabetical order (in case needed); replicates are at
-    # level sub_1; if no subfolder exists, sub_1 will equal "file", which is
-    # acceptable
-    dplyr::arrange(.data$pivot, .data$sub_1, .by_group = TRUE) %>%
-    # group replicates per well
-    dplyr::group_by(.data$pivot, .add = TRUE) %>%
-    # add replicate information
-    dplyr::mutate(replicate = .data$sub_1,
-                  n_replicates = dplyr::n_distinct(.data$replicate)) %>%
-    dplyr::group_by(.data$replicate, .add = TRUE)
+    dplyr::mutate(findex = dplyr::row_number())
 
   log_debugging(object = datad)
 
-  if (any(lengths(paths) > 1)) {
+  # If grp_N is not the only group after limiting to unique group folders
+  # unique folder names (except for the lowest one), then drop it also
 
-    datad$n_replicates <- lengths(paths)
-    datad$replicate[which(lengths(paths) > 1)] <- NA
-    # not sure if this may cause complications later
-    datad$path <- paths
+  if (is.null(usr.relative_to) &&
+      (grp_rm <- max(datad$grps_level, na.rm = TRUE)) > 0 &&
+      length(unique(datad[[paste0(grp_prefix, grp_rm)]])) == 1) {
 
-  }
-
-  # if grp_0 is not the only group, drop it
-
-  if (max(datad$nest_level, na.rm = TRUE) > 1) {
-
-    datad <- datad %>% dplyr::ungroup(.data$grp_0) %>% dplyr::select(!.data$grp_0)
+    datad[[paste0(grp_prefix, grp_rm)]] <- NA
 
   }
 
   datad <- datad %>%
-    dplyr::select(!tidyselect::any_of(c("nest_level", "subs_level"))) %>%
+    # remove empty groups
+    dplyr::mutate(across(starts_with(grp_prefix), ~ dplyr::na_if(., ""))) %>%
+    dplyr::select(!tidyselect::vars_select_helpers$where(~ all(is.na(.)))) %>%
+    # preserve the group index
+    dplyr::group_by(dplyr::across(tidyselect::starts_with(grp_prefix))) %>%
+    dplyr::mutate(gindex = dplyr::cur_group_id()) %>%
+    # sort by well in alphabetical order (in case needed); replicates are at
+    # level sub_1; if no subfolder exists, sub_1 will equal "file", which is
+    # acceptable
+    dplyr::arrange(.data$pivot, .data[[paste0(sub_prefix, 1)]], .by_group = TRUE) %>%
+    # group replicates per well
+    dplyr::group_by(.data$pivot, .add = TRUE) %>%
+    # add replicate information
+    dplyr::mutate(
+      replicate = dplyr::case_when(
+        lengths(path_to_files) > 1 ~ NA_character_,
+        TRUE ~ .data[[paste0(sub_prefix, 1)]]),
+      n_replicates = dplyr::case_when(
+        lengths(path_to_files) > 1 ~ lengths(path_to_files),
+        TRUE ~ dplyr::n_distinct(.data$replicate)))
+
+  if (all(lengths(paths) == 1)) datad <- dplyr::group_by(datad, .data$replicate,
+                                                         .add = TRUE)
+
+  datad <- datad %>%
+    dplyr::select(!tidyselect::any_of(c("grps_level", "subs_level"))) %>%
     dplyr::select(dplyr::group_vars(datad),
-                  tidyselect::any_of("n_replicates"),
-                  .data$findex, .data$gindex, tidyselect::everything())
+                  tidyselect::any_of(c("n_replicates", "findex", "gindex",
+                                       "path_to_files", "path_to_group")),
+                  tidyselect::everything())
 
   attr(datad, "dir") <- relative_to
 
