@@ -1,3 +1,26 @@
+#' Startup parameters
+#'
+#' @noRd
+.onLoad <- function(...) {
+
+  options(tibble.width = Inf)
+
+  if (is.null(getOption("summerr.log"))) options("summerr.log" = TRUE)
+
+  if (getOption("summerr.log", default = FALSE)) {
+
+    packageStartupMessage("... logging to the console for 'summerr' is enabled.\n",
+                          "    You can disable it with 'options(summerr.log = FALSE)'.")
+
+  } else {
+
+    packageStartupMessage("... logging to the console for 'summerr' is disabled.\n",
+                          "    You can enable it with 'options(summerr.log = TRUE)'.")
+
+  }
+
+}
+
 #' Make first letter of a string uppercase
 #'
 #' @param x an string
@@ -18,7 +41,7 @@ str_first_up <- function(x) {
 #' @noRd
 log_task <- function(...) {
 
-  if (getOption("log", default = TRUE)) {
+  if (getOption("summerr.log", default = TRUE)) {
 
     rlang::inform(message = rlang::format_error_bullets(
       c(i = paste0(str_first_up(paste(...)), "."))
@@ -37,7 +60,7 @@ log_task <- function(...) {
 #' @noRd
 log_process <- function(...) {
 
-  if (getOption("log", default = TRUE)) {
+  if (getOption("summerr.log", default = TRUE)) {
 
     rlang::inform(message = rlang::format_error_bullets(
       c(i = paste0("... ", paste(...), "."))
@@ -66,7 +89,7 @@ log_done <- function() {
 #' @noRd
 log_message <- function(...) {
 
-  if (getOption("log", default = TRUE)) {
+  if (getOption("summerr.log", default = TRUE)) {
 
     rlang::inform(message = rlang::format_error_bullets(
       c(i = paste("...", ...))
@@ -100,7 +123,7 @@ log_error <- function(header, body, ...) {
 #' @noRd
 log_debugging <- function(..., object = NULL) {
 
-  if (getOption("debug", default = TRUE)) {
+  if (getOption("summerr.debug", default = FALSE)) {
 
     fn_call <- match.call(call = sys.call(-1))[1L]
 
