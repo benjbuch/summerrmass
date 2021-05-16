@@ -518,7 +518,7 @@ import_layout_from_paths <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
 
   usr.relative_to <- relative_to  # store user argument
 
-  internal_path_cleanup <- function(p) {
+  cleanup_path <- function(path) {
 
     # Globally, we do not alter the file paths provided, but internally we
     # must create some common ground since occasionally, we may receive mixed
@@ -527,7 +527,7 @@ import_layout_from_paths <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
     # - paths are "normalized"
     # - paths do not start with "/" (which they may of course usually do)
 
-    stringr::str_remove(string = normalizePath(p),
+    stringr::str_remove(string = normalizePath(path),
                         pattern = paste0("^", .Platform$file.sep))
 
   }
@@ -537,7 +537,7 @@ import_layout_from_paths <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
 
   first_paths <- sapply(paths, "[[", 1)
 
-  datad <- tibble::as_tibble(internal_path_cleanup(first_paths))
+  datad <- tibble::as_tibble(cleanup_path(first_paths))
 
   # To avoid spurious matching of the regex to a common base directory, remove
   # the common path first.
@@ -581,7 +581,7 @@ import_layout_from_paths <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
 
     # browser()
 
-    relative_to <- internal_path_cleanup(relative_to)
+    relative_to <- cleanup_path(relative_to)
 
     # The "." will designate the common path designated by the user as input
     # or identified as topmost shared directory. If there is no ".", there are
@@ -607,7 +607,7 @@ import_layout_from_paths <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
     # Remove trailing path separator as we do not count "empty" directories; the
     # grp parts then look like "dir1/dir2/dir3" of which the leftmost may be
     # shared across all observations.
-    dplyr::mutate(V1 = internal_path_cleanup(V1)) %>%
+    dplyr::mutate(V1 = cleanup_path(V1)) %>%
     dplyr::mutate(
       grps_level = stringr::str_count(.data$V1, pattern = .Platform$file.sep),
       subs_level = stringr::str_count(.data$V2, pattern = .Platform$file.sep)
