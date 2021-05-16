@@ -10,12 +10,12 @@
   if (getOption("summerr.log", default = FALSE)) {
 
     packageStartupMessage("... logging to the console for 'summerr' is enabled.\n",
-                          "    You can disable it with 'options(summerr.log = FALSE)'.")
+                          "    You can disable it with `options(summerr.log = FALSE)`.")
 
   } else {
 
     packageStartupMessage("... logging to the console for 'summerr' is disabled.\n",
-                          "    You can enable it with 'options(summerr.log = TRUE)'.")
+                          "    You can enable it with `options(summerr.log = TRUE)`.")
 
   }
 
@@ -109,6 +109,23 @@ log_message <- function(...) {
     rlang::inform(message = rlang::format_error_bullets(
       c(i = paste("...", ...))
     ))
+
+  }
+
+}
+
+#' Logging an object
+#'
+#' @description
+#' Typically a table or else.
+#'
+#' @param object object
+#' @noRd
+log_object <- function(object) {
+
+  if (getOption("summerr.log", default = TRUE)) {
+
+    print(object)
 
   }
 
