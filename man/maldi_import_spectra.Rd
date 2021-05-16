@@ -2,7 +2,7 @@
 % Please edit documentation in R/maldi_fun.R
 \name{maldi_import_spectra}
 \alias{maldi_import_spectra}
-\title{Import all MALDI spectra from a directory.}
+\title{Import all MALDI spectra from a directory}
 \usage{
 maldi_import_spectra(path = getwd(), ...)
 }

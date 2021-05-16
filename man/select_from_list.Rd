@@ -2,7 +2,7 @@
 % Please edit documentation in R/fun_helpers.R
 \name{select_from_list}
 \alias{select_from_list}
-\title{Prompt to select from a list of options.}
+\title{Prompt to select from a list of options}
 \usage{
 select_from_list(items, caption = "Select an item")
 }

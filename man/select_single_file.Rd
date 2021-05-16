@@ -2,7 +2,7 @@
 % Please edit documentation in R/fun_helpers.R
 \name{select_single_file}
 \alias{select_single_file}
-\title{Interactively choose a single file.}
+\title{Interactively choose a single file}
 \usage{
 select_single_file(
   path = getwd(),

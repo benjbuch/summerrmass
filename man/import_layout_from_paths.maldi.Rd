@@ -2,7 +2,7 @@
 % Please edit documentation in R/maldi_fun.R
 \name{import_layout_from_paths.maldi}
 \alias{import_layout_from_paths.maldi}
-\title{Establish the experiment layout from nested directories for MALDI analyses.}
+\title{Establish the experiment layout from nested directories for MALDI analyses}
 \usage{
 import_layout_from_paths.maldi(
   paths,

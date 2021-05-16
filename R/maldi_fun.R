@@ -1,6 +1,6 @@
 # FILE IMPORT AND EXPORT -------------------------------------------------------
 
-#' Establish the experiment layout from nested directories for MALDI analyses.
+#' Establish the experiment layout from nested directories for MALDI analyses
 #'
 #' This wrapper conveniently establishes the experiment layout from nested file
 #' groups as exported by Bruker FlexAnalysis. Here, measurements for each plate
@@ -43,7 +43,7 @@ import_layout_from_paths.maldi <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
 
 }
 
-#' Import all MALDI spectra from a directory.
+#' Import all MALDI spectra from a directory
 #'
 #' Calls \link[MALDIquantForeign:MALDIquantForeign-package]{MALDIquantForeign} to scan
 #' a directory for MALDI spectra, import them, and perform intial qualtiy control.
@@ -75,6 +75,22 @@ maldi_import_spectra <- function(path = getwd(), ...) {
 
   setwd(path)
 
+  # number of existing mzXML and fid files in path
+
+  log_task("scanning", sQuote(path), "for mass spectra")
+
+  files_mzxml <- list.files(
+    path = path, pattern = "\\.mzxml", ignore.case = TRUE,
+    recursive = TRUE, full.names = TRUE)
+
+  files_fid   <- data.frame(group = list.files(
+    path = path, pattern = "fid", ignore.case = TRUE,
+    recursive = TRUE, full.names = TRUE))
+
+  log_process("found", length(files_fid), "Bruker FID files")
+
+  log_process("found", length(files_mzxml), "mass spectrometry data (mzXML) files")
+
   # processing of fid files (optional)
 
   if (.Platform$OS.type == "windows" && nchar(Sys.which("compassxport")) > 0 &&
@@ -85,17 +101,12 @@ maldi_import_spectra <- function(path = getwd(), ...) {
 
     answer <- rstudioapi::showQuestion(
       "Run CompassXport?",
-      "A command line version of 'compassxport' has been detected on your system. Do you want to (re-)process the FID data in this directory?\n\nChoosing 'yes' will overwrite the existing 'Analysis.mzXML' files.
+      "A command line version of 'compassxport' has been detected on your system. Do you want to (re-)process the FID files in this path?\n\nChoosing 'yes' will overwrite the existing 'Analysis.mzXML' files.
       ", ok = "No", cancel = "Yes")
 
     if (!answer) {
 
-      log_task("scanning", sQuote(path), "for FID files")
-
-      fids <- list.files(path = path, pattern = "fid",
-                         recursive = TRUE, full.names = TRUE)
-
-      log_process("processing", length(fids), "FDI files")
+      log_process("processing", length(fids), "Bruker FDI files")
 
       for (i in fids) shell(shQuote(paste("compassxport -a",
                                           shQuote(normalizePath(i), type = "cmd"),
@@ -107,17 +118,19 @@ maldi_import_spectra <- function(path = getwd(), ...) {
 
   }
 
-  # processing of mzXML spectra
+  # importing of mzXML spectra
 
-  log_task("scanning", sQuote(path), "for mzXML mass spectra. This might take a while")
+  files_mzxml <- list.files(
+    path = path, pattern = "\\.mzxml", ignore.case = TRUE,
+    recursive = TRUE, full.names = TRUE)
+
+  log_process("importing", length(files_mzxml), "mass spectrometry data (mzXML) files")
 
   suppressMessages({
 
     data_mzxml <- MALDIquantForeign::importMzXml(path, ...)
 
   })
-
-  log_process("imported", length(data_mzxml), "spectra")
 
   # quality control
 
@@ -150,7 +163,7 @@ maldi_import_spectra <- function(path = getwd(), ...) {
 
 }
 
-#' Get the file paths of a MALDI spectrum as vector.
+#' Get the file paths of a MALDI spectrum as vector
 #'
 #' @param object A (list of) \code{\link[MALDIquant:MassSpectrum-class]{MassSpectrum}}.
 #'
@@ -295,7 +308,7 @@ maldi_average_by_well <- function(object,
 
 }
 
-#' Extract intensities for given m/z values.
+#' Extract intensities for given m/z values
 #'
 #' @inheritParams maldi_get_paths
 #' @param mass_list Named list specifying the m/z at which to try extracting the

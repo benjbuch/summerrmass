@@ -2,7 +2,7 @@
 
 utils::globalVariables(".")
 
-#' Interpret characters as well names.
+#' Interpret characters as well names
 #'
 #' @param well Character vector.
 #' @param as.tibble If \code{TRUE}, a \code{\link[dplyr:tibble]{tibble}} is
@@ -51,7 +51,7 @@ as_well <- function(well, as.tibble = FALSE, to.upper = TRUE, zero.padding = 2) 
 
 #  DIRECTORY NAVIGATION --------------------------------------------------------
 
-#' Express file paths in their canonical form. Truly.
+#' Express file paths in their canonical form -- Truly
 #'
 #' Under Windows and UNIX, \code{\link[base:.Platform]{.Platform$file.sep}} both
 #' may expand to "\code{/}", whereas some upstream applications may still use
@@ -82,7 +82,7 @@ normalizePath <- function(path) {
 
 }
 
-#' Prompt to select from a list of options.
+#' Prompt to select from a list of options
 #'
 #' Helper asking the user to select an item from a list.
 #'
@@ -121,7 +121,7 @@ select_from_list <- function(items, caption = "Select an item") {
 
 }
 
-#' Interactively choose a directory.
+#' Interactively choose a directory
 #'
 #' This is a wrapper to select a directory \code{path} to process. Depending on
 #' the mode R is invoked from, choosing is interactive and may use the RStudio IDE.
@@ -163,7 +163,7 @@ select_directory <- function(path = getwd(), caption = "Select a directory",
 
 }
 
-#' Interactively choose a single file.
+#' Interactively choose a single file
 #'
 #' This is a convenient wrapper to select one file in the directory \code{path}
 #' from multiple files matching \code{pattern}.
@@ -251,7 +251,7 @@ select_single_file <- function(path = getwd(), prefix = "*.+", suffix = "*",
 
 #  GENERAL FILE IMPORT AND EXPORT ----------------------------------------------
 
-#' Import a (plate) layout from an Excel file.
+#' Import a (plate) layout from an Excel file
 #'
 #' A (square plate) layout assigning each cell (well) to a specific content with
 #' metadata to be taken from columns and/or rows parallel to the plate design.
@@ -408,7 +408,7 @@ import_layout_from_excel <- function(
 
 }
 
-#' Import an experiment layout from nested directories.
+#' Import an experiment layout from nested directories
 #'
 #' Some data is organized in folders that contain files with similar or even
 #' identical names. Given a list of paths pointing to those files, the layout

@@ -2,7 +2,7 @@
 % Please edit documentation in R/fun_helpers.R
 \name{as_well}
 \alias{as_well}
-\title{Interpret characters as well names.}
+\title{Interpret characters as well names}
 \usage{
 as_well(well, as.tibble = FALSE, to.upper = TRUE, zero.padding = 2)
 }
@@ -21,7 +21,7 @@ A list with \code{well_let}, \code{well_num} and \code{well} or a
 tibble with the corresponding column names.
 }
 \description{
-Interpret characters as well names.
+Interpret characters as well names
 }
 \examples{
 as_well(c("a1", "B2", "Q23"))

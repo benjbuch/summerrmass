@@ -2,7 +2,7 @@
 % Please edit documentation in R/maldi_fun.R
 \name{maldi_peaks_by_well}
 \alias{maldi_peaks_by_well}
-\title{Extract intensities for given m/z values.}
+\title{Extract intensities for given m/z values}
 \usage{
 maldi_peaks_by_well(
   object,
@@ -37,7 +37,7 @@ the mass at the detected peak m/z.}
 or only in ambiguous cases (\code{FALSE}).}
 }
 \description{
-Extract intensities for given m/z values.
+Extract intensities for given m/z values
 }
 \details{
 Peaks are pre-selected froma smoothed spectrum within the m/z range given by

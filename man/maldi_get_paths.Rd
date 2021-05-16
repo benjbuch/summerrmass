@@ -2,7 +2,7 @@
 % Please edit documentation in R/maldi_fun.R
 \name{maldi_get_paths}
 \alias{maldi_get_paths}
-\title{Get the file paths of a MALDI spectrum as vector.}
+\title{Get the file paths of a MALDI spectrum as vector}
 \usage{
 maldi_get_paths(object)
 }
@@ -10,5 +10,5 @@ maldi_get_paths(object)
 \item{object}{A (list of) \code{\link[MALDIquant:MassSpectrum-class]{MassSpectrum}}.}
 }
 \description{
-Get the file paths of a MALDI spectrum as vector.
+Get the file paths of a MALDI spectrum as vector
 }

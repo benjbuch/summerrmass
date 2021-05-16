@@ -2,7 +2,7 @@
 % Please edit documentation in R/fun_helpers.R
 \name{select_directory}
 \alias{select_directory}
-\title{Interactively choose a directory.}
+\title{Interactively choose a directory}
 \usage{
 select_directory(
   path = getwd(),

@@ -2,7 +2,7 @@
 % Please edit documentation in R/fun_helpers.R
 \name{import_layout_from_excel}
 \alias{import_layout_from_excel}
-\title{Import a (plate) layout from an Excel file.}
+\title{Import a (plate) layout from an Excel file}
 \usage{
 import_layout_from_excel(
   file,

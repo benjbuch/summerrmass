@@ -2,7 +2,7 @@
 % Please edit documentation in R/fun_helpers.R
 \name{normalizePath}
 \alias{normalizePath}
-\title{Express file paths in their canonical form. Truly.}
+\title{Express file paths in their canonical form -- Truly}
 \usage{
 normalizePath(path)
 }

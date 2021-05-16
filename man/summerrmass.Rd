@@ -14,11 +14,9 @@ summerrmass
 
 
 \itemize{
-\item{Verbose "logging" can be turned on/off by setting \code{options(log = TRUE)},
+\item{Verbose "logging" can be turned on/off by setting \code{options(summerr.log = TRUE)},
 which will print messages related to the current stage of the analysis.}
-\item{Turn on messages for debugging with \code{options(debug = TRUE)}.}
-\item{To display all columns of "tables" (\code{\link[tibble:tibble]{tibble}}),
-set \code{options(tibble.width = Inf)}.}
+\item{Turn on messages for debugging with \code{options(summerr.debug = TRUE)}.}
 }
 }
 

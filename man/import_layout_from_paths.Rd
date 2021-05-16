@@ -2,7 +2,7 @@
 % Please edit documentation in R/fun_helpers.R
 \name{import_layout_from_paths}
 \alias{import_layout_from_paths}
-\title{Import an experiment layout from nested directories.}
+\title{Import an experiment layout from nested directories}
 \usage{
 import_layout_from_paths(
   paths,
