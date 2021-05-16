@@ -6,19 +6,15 @@
 \usage{
 maldi_average_by_well(
   object,
-  INDEX = NULL,
   method_baseline = "SNIP",
   method_average = "mean",
   ...,
-  final_trim_range = c(0, Inf)
+  final_trim_range = c(0, Inf),
+  pivot = "[0-9]_[A-Z]+[0-9]+"
 )
 }
 \arguments{
 \item{object}{A (list of) \code{\link[MALDIquant:MassSpectrum-class]{MassSpectrum}}.}
-
-\item{INDEX}{a \code{\link[base]{list}} of one or more \code{\link[base]{factor}}s,
-    each of same length as \code{X}.  The elements are coerced to
-    factors by \code{\link[base]{as.factor}}.}
 
 \item{method_baseline}{Method for background subtraction.
 See \link[MALDIquant:removeBaseline]{MALDIquant::removeBaseline}.}
@@ -30,7 +26,15 @@ See \link[MALDIquant:averageMassSpectra]{MALDIquant::averageMassSpectra}.}
 
 \item{final_trim_range}{A numeric vector from which the maximum and the minimum
 value are taken to trim the spectrum to a relevant range.}
+
+\item{pivot}{A \link[base:regex]{regular expression} describing the
+name of a single folder in each tree up to which "groups" and from which
+"replicates" are established. See Details.}
 }
 \description{
 Applies \link{maldi_average_spectra} to each group of wells using \link{maldi_tapply}.
+}
+\details{
+The wells are identified using \code{pivot} from the associated paths in the
+object. See \link{import_layout_from_paths.maldi}.
 }
