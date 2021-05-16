@@ -1,0 +1,19 @@
+---
+title: "MALDI with IC50 Workflow"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{MALDI with IC50 Workflow}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(summerrmass)
+```
