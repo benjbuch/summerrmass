@@ -6,21 +6,36 @@
 \usage{
 maldi_batch(
   path = NULL,
+  pivot = "[0-9]_[A-Z]+[0-9]+",
+  layout_file = NULL,
+  confirm_layout_file = TRUE,
   manual = FALSE,
   review = TRUE,
+  FUN = maldi_peaks_by_well,
+  MoreArgs = list(),
+  layout_import_FUN = import_layout_from_excel,
   stored_peaks.generic = "maldi_peaks.rds",
-  stored_spect.generic = "maldi_specs.rds",
-  pivot = "[0-9]_[A-Z]+[0-9]+",
-  MoreArgs = list()
+  stored_spect.generic = "maldi_specs.rds"
 )
 }
 \arguments{
 \item{path}{Directory with mass spectra to analyze, store and import results;
-may contain the plate layout.}
+may contain the plate layout(s).}
+
+\item{pivot}{A \link[base:regex]{regular expression} describing the
+name of a single folder in each tree up to which "groups" and from which
+"replicates" are established. See Details.}
+
+\item{layout_file, confirm_layout_file, layout_import_FUN}{Path to a file that
+contains metadata associated with each well/group. \code{layout_FUN} is applied
+to \code{layout_file} before it is joined with the measurement result. Must
+share column names with \link{import_layout_from_paths.maldi}. See Details.}
 
 \item{manual}{...}
 
 \item{review}{...}
+
+\item{FUN}{The function to be applied for peak detection.}
 }
 \value{
 A list with one element for each group.
@@ -50,6 +65,34 @@ If such a folder contains already analyses saved as \code{stored_peaks.generic}
 or \code{stored_spect.generic}, these analyses can be imported for the next stage;
 if not, the original files are renamed with a timestamp and new files added.
 
-If such a folder contains a plate layout (see \link{import_layout_from_plate}),
-the data is combined.
+\subsection{Joining with metadata from external plate layout}
+
+If \code{layout_file} is \code{NULL}, the results will not be joined with an
+external file that holds associated metadata. (Skip this section.)
+
+External plate layouts can be provided via \code{layout_file} either (1) as an
+absolute path to a single file somwhere in the file system or (2) a file in
+expressed relative to the selected \code{path}, e.g. "global_layout.xls".
+The query is made via \code{\link[base:files]{file.exists}}.
+In such cases, the file is used for all groups. In case (3) when such a file
+does not exist, the file is looked for locally in each group directory, where
+it must be present each time under the same name, e.g., as "layout.xls".
+If (4) this is neither the case and \code{confirm_layout_file = TRUE}, you
+will finally be prompted to select a layout file. You can force this behavior
+by setting \code{layout_file = ""}.
+
+If \code{confirm_layout_file = TRUE}, you will also be asked if the file
+identified according to one of the rules (1-3) above should be taken or not.
+
+To successfully merge your layout with the data, common column names must
+exist between your layout file and the result of \link{import_layout_from_paths.maldi},
+which extends the generic \link{import_layout_from_paths} by explicitly
+extracting a well number as column "well".
+
+If you choose a graphical approach to define the plate layout, consider using
+\link{import_layout_from_excel}, which will convert the plate into a (long)
+table with a column "well" and "content".
+
+If you provide such a (long) table directly, provide \code{\link{readxl::read_excel}}
+or another appropriate function as argument \code{layout_import_FUN}.
 }
