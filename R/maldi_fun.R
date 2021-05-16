@@ -73,6 +73,8 @@ maldi_import_spectra <- function(path = getwd(), ...) {
 
   path <- normalizePath(path)
 
+  # this is important to call the terminal exection
+
   setwd(path)
 
   # number of existing mzXML and fid files in path
@@ -311,6 +313,7 @@ maldi_average_by_well <- function(object,
 #' Extract intensities for given m/z values
 #'
 #' @inheritParams maldi_get_paths
+#' @inheritParams import_layout_from_paths.maldi
 #' @param mass_list Named list specifying the m/z at which to try extracting the
 #' intensity.
 #' @param tolerance_assignment Maximum difference between the calculated m/z and
@@ -341,7 +344,8 @@ maldi_peaks_by_well <- function(object,
                                 method = "MAD",
                                 SNR = 3,
                                 ...,
-                                manual = FALSE) {
+                                manual = FALSE,
+                                pivot = "[0-9]_[A-Z]+[0-9]+") {
 
   select_peaks_manually <- function(s0, s1, p1, cx, mx, tol = tolerance_assignment) {
 
@@ -481,7 +485,7 @@ maldi_peaks_by_well <- function(object,
   }
 
   maldi_get_paths(object) %>%
-    import_layout_from_paths.maldi(relative_to = attr(object, "dir")) %>%
+    import_layout_from_paths.maldi(pivot = pivot, relative_to = attr(object, "dir")) %>%
     dplyr::left_join(
       data_peaks.tmp %>% dplyr::bind_rows(.id = "findex") %>%
         dplyr::mutate(findex = as.integer(.data$findex)),
