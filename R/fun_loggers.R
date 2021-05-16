@@ -35,6 +35,21 @@ str_first_up <- function(x) {
 
 }
 
+#' Logging a separation line
+#'
+#' @param char the character to repeat
+#' @param line the length of the line
+#' @noRd
+log_line <- function(char = "=", line = 68) {
+
+  if (getOption("summerr.log", default = TRUE)) {
+
+    rlang::inform(message = paste0(rep(char, line), collapse = ""))
+
+  }
+
+}
+
 #' Logging of tasks
 #'
 #' @param ... message
@@ -104,7 +119,7 @@ log_message <- function(...) {
 #' @param header A concise description of the error.
 #' @param body A named character that indicates, e.g. which elements caused an
 #' error.
-#' @param ... Anything else passed to \code{\link[rlang:abort]{abort(...)}}.
+#' @param ... Anything else passed to \code{\link[rlang:abort]{abort(...)}} as metadata.
 #' @noRd
 log_error <- function(header, body, ...) {
 
