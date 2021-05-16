@@ -11,7 +11,8 @@ maldi_peaks_by_well(
   method = "MAD",
   SNR = 3,
   ...,
-  manual = FALSE
+  manual = FALSE,
+  pivot = "[0-9]_[A-Z]+[0-9]+"
 )
 }
 \arguments{
@@ -35,6 +36,10 @@ the mass at the detected peak m/z.}
 
 \item{manual}{Logical whether all peaks must be picked manually (\code{TRUE})
 or only in ambiguous cases (\code{FALSE}).}
+
+\item{pivot}{A \link[base:regex]{regular expression} describing the
+name of a single folder in each tree up to which "groups" and from which
+"replicates" are established. See Details.}
 }
 \description{
 Extract intensities for given m/z values

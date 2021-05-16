@@ -281,19 +281,31 @@ maldi_tapply <- function(object, FUN,
 #'
 #' @inheritParams maldi_tapply
 #' @inheritParams maldi_average_spectra
+#' @inheritParams import_layout_from_paths.maldi
+#'
+#' @details
+#' The wells are identified using \code{pivot} from the associated paths in the
+#' object. See \link{import_layout_from_paths.maldi}.
 #'
 #' @importFrom magrittr %>%
 #' @importFrom rlang .data
 #'
 #' @export
 maldi_average_by_well <- function(object,
-                                  INDEX = NULL,
                                   method_baseline = "SNIP",
                                   method_average  = "mean",
                                   ...,
-                                  final_trim_range = c(0, Inf)) {
+                                  final_trim_range = c(0, Inf),
+                                  pivot = "[0-9]_[A-Z]+[0-9]+") {
 
   log_process("averaging and aligning spectra")
+
+  INDEX <- maldi_get_paths(object) %>%
+    import_layout_from_paths.maldi(pivot = pivot,
+                                   relative_to = attr(object, "dir")) %>%
+    # it is important to pass the index along the order of the MassSpectrum list
+    dplyr::arrange(.data$findex) %>%
+    dplyr::group_indices()
 
   data_mzxml <- maldi_tapply(object = object, FUN = maldi_average_spectra,
                              INDEX = INDEX,
@@ -328,6 +340,8 @@ maldi_average_by_well <- function(object,
 #' \code{mass_list} and \code{tolerance_assignment}. Peaks are measured in the
 #' original, unsmoothed spectrum using \code{\link[MALDIquant:detectPeaks]{MALDIquant::detectPeaks}}.
 #'
+#'
+#'
 #' @importFrom magrittr %>%
 #' @importFrom rlang .data
 #'
@@ -347,7 +361,7 @@ maldi_peaks_by_well <- function(object,
                                 manual = FALSE,
                                 pivot = "[0-9]_[A-Z]+[0-9]+") {
 
-  select_peaks_manually <- function(s0, s1, p1, cx, mx, tol = tolerance_assignment) {
+  pick_peaks_by_hand <- function(s0, s1, p1, cx, mx, tol = tolerance_assignment) {
 
     # s0: spectrum as is, for plotting only
     # s1: spectrum processed for peak detection, e.g. smoothed
@@ -435,7 +449,7 @@ maldi_peaks_by_well <- function(object,
 
       if (manual) {
 
-        smoo_list <- select_peaks_manually(
+        smoo_list <- pick_peaks_by_hand(
           s0 = mass_spectrum,
           s1 = smoo_spectrum,
           p1 = smoo_peaks,
@@ -452,7 +466,7 @@ maldi_peaks_by_well <- function(object,
 
         if (any(is.na(smoo_list))) {
 
-          smoo_list <- select_peaks_manually(
+          smoo_list <- pick_peaks_by_hand(
             s0 = mass_spectrum,
             s1 = smoo_spectrum,
             p1 = smoo_peaks,
