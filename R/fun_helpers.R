@@ -502,6 +502,10 @@ import_layout_from_excel <- function(
 #' import_layout_from_paths(paste0("folderX/", demo_paths[1:2]), relative_to = NULL)
 #' import_layout_from_paths(paste0("folderY/folderX/", demo_paths), relative_to = NULL)
 #'
+#' # more complex scenarios
+#' import_layout_from_paths(paste0(c("folderY/", "folderX/"), demo_paths), relative_to = NULL)
+#' import_layout_from_paths(paste0(c("folderZ/folderY/", "folderX/"), demo_paths), relative_to = NULL)
+#'
 #' @importFrom magrittr %>%
 #' @importFrom rlang .data
 #'
