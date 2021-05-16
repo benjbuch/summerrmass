@@ -41,11 +41,17 @@ or only in ambiguous cases (\code{FALSE}).}
 name of a single folder in each tree up to which "groups" and from which
 "replicates" are established. See Details.}
 }
+\value{
+A \code{\link[tibble:tibble]{tibble}} with columns "ion", "mass", "intensity",
+"percent" and well identifiers "well" etc. that relate the measured intensies
+to the \code{object}, e.g. using "findex" (position in list) and/or "gindex"
+(group number in list).
+}
 \description{
 Extract intensities for given m/z values
 }
 \details{
-Peaks are pre-selected froma smoothed spectrum within the m/z range given by
+Peaks are pre-selected from a smoothed spectrum within the m/z range given by
 \code{mass_list} and \code{tolerance_assignment}. Peaks are measured in the
 original, unsmoothed spectrum using \code{\link[MALDIquant:detectPeaks]{MALDIquant::detectPeaks}}.
 }
