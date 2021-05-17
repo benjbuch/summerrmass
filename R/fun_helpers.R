@@ -97,15 +97,22 @@ normalizePath <- function(path) {
 #' this means that by using \code{"%y%m%d"} as stamp, only the last backup per
 #' day is preserved.
 #'
+#' @return
+#' \code{TRUE} if succesful, \code{FALSE} otherwise.
+#'
 backup_file <- function(path, sep = "_", stamp = "%y%m%d") {
 
   if (file.exists(path)) {
 
-    bkp_file <- normalizePath(paste0(path, sep, format(file.mtime(path))))
+    bkp_file <- normalizePath(paste0(path, sep, format(file.mtime(path), stamp)))
 
     if (file.exists(bkp_file)) file.remove(bkp_file)
 
     file.rename(path, bkp_file)
+
+  } else {
+
+    FALSE
 
   }
 
