@@ -3,7 +3,15 @@
 #' @noRd
 .onLoad <- function(...) {
 
-  options(tibble.width = Inf)
+  # initial setup for formatting output
+
+  .summerr.fancyqt = getOption("useFancyQuotes")
+  options(useFancyQuotes = .Platform$OS.type == "unix")
+
+  .summerr.tibble.width = getOption("tibble.width")
+  options(tibble.width  = Inf)
+
+  # startup messages
 
   if (is.null(getOption("summerr.log"))) options("summerr.log" = TRUE)
 
@@ -18,6 +26,17 @@
                           "    You can enable it with `options(summerr.log = TRUE)`.")
 
   }
+
+}
+
+#' Shutdown parameters
+#'
+#' @noRd
+.onUnload <- function(...) {
+
+  options(useFancyQuotes = .summerr.fancyqt)
+  options(tibble.width   = .summerer.tibble.width)
+
 
 }
 
