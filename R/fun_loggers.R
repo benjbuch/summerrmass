@@ -1,15 +1,12 @@
 #' Startup parameters
 #'
 #' @noRd
-.onLoad <- function(...) {
+.onAttach <- function(...) {
 
   # initial setup for formatting output
 
-  .summerr.fancyqt = getOption("useFancyQuotes")
   options(useFancyQuotes = .Platform$OS.type == "unix")
-
-  .summerr.tibble.width = getOption("tibble.width")
-  options(tibble.width  = Inf)
+  options(tibble.width = Inf)
 
   # startup messages
 
@@ -17,26 +14,15 @@
 
   if (getOption("summerr.log", default = FALSE)) {
 
-    packageStartupMessage("... logging to the console for 'summerr' is enabled.\n",
-                          "    You can disable it with `options(summerr.log = FALSE)`.")
+    packageStartupMessage("... Logging to the console for 'summerr' is enabled. ",
+                          "You can disable it with `options(summerr.log = FALSE)`.")
 
   } else {
 
-    packageStartupMessage("... logging to the console for 'summerr' is disabled.\n",
-                          "    You can enable it with `options(summerr.log = TRUE)`.")
+    packageStartupMessage("... Llogging to the console for 'summerr' is disabled. ",
+                          "You can enable it with `options(summerr.log = TRUE)`.")
 
   }
-
-}
-
-#' Shutdown parameters
-#'
-#' @noRd
-.onUnload <- function(...) {
-
-  options(useFancyQuotes = .summerr.fancyqt)
-  options(tibble.width   = .summerer.tibble.width)
-
 
 }
 
