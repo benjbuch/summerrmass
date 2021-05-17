@@ -82,6 +82,35 @@ normalizePath <- function(path) {
 
 }
 
+#' Backup a file if necessary
+#'
+#' @param path A file path.
+#' @param sep A character to separate the existing file path and the stamp added.
+#' @param stamp A datestamp (default) and/or timestamp constructed according
+#' to this specification (\link[base:strptime]{POSIXct}) is added to pre-existing
+#' files in path.
+#'
+#' @details
+#' The stamp is extracted from an existing file's modification time.
+#' For details \link[base:file.info]{file.mtime(...)}.
+#' If a backup file with the same stamp exists, it is replaced In practical terms
+#' this means that by using \code{"%y%m%d"} as stamp, only the last backup per
+#' day is preserved.
+#'
+backup_file <- function(path, sep = "_", stamp = "%y%m%d") {
+
+  if (file.exists(path)) {
+
+    bkp_file <- normalizePath(paste0(path, sep, format(file.mtime(path))))
+
+    if (file.exists(bkp_file)) file.remove(bkp_file)
+
+    file.rename(path, bkp_file)
+
+  }
+
+}
+
 #' Prompt to select from a list of options
 #'
 #' Helper asking the user to select an item from a list.
