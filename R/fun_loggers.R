@@ -142,7 +142,7 @@ log_object <- function(object) {
 #' @noRd
 log_warn <- function(...) {
 
-  rlang::warn(message = paste0(...))
+  rlang::warn(message = str_first_up(paste0(...)))
 
 }
 
