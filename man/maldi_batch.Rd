@@ -11,11 +11,14 @@ maldi_batch(
   confirm_layout_file = TRUE,
   manual = FALSE,
   review = TRUE,
-  FUN = maldi_peaks_by_well,
-  MoreArgs = list(),
-  layout_import_FUN = import_layout_from_excel,
+  FUN_spect = "maldi_average_by_well",
+  MoreArgs_spect = list(pivot = "[0-9]_[A-Z]+[0-9]+"),
+  FUN_peaks = "maldi_peaks_by_well",
+  MoreArgs_peaks = list(pivot = "[0-9]_[A-Z]+[0-9]+"),
+  layout_import_FUN = "import_layout_from_excel",
   stored_peaks.generic = "maldi_peaks.rds",
-  stored_spect.generic = "maldi_specs.rds"
+  stored_spect.generic = "maldi_specs.rds",
+  stamp = "\%y\%m\%d"
 )
 }
 \arguments{
@@ -35,7 +38,15 @@ share column names with \link{import_layout_from_paths.maldi}. See Details.}
 
 \item{review}{...}
 
-\item{FUN}{The function to be applied for peak detection.}
+\item{FUN_spect, MoreArgs_spect}{The function to be applied for pre-processing
+the mass spectra using \code{MoreArgs_spect}.}
+
+\item{stamp}{A datestamp (default) and/or timestamp constructed according
+to this specification (\link[base:strptime]{POSIXct}) is added to pre-existing
+files in path.}
+
+\item{FUN_peak, MoreArgs_peak}{The function to be applied for peak detection
+using \code{MoreArgs_peak}.}
 }
 \value{
 A list with one element for each group.
@@ -51,10 +62,10 @@ The batch process is split into different stages starting from the selected
 \code{path} as main directory:
 
 \enumerate{
-\item{import and pre-processing of the spectra},
+\item{import and pre-processing of the spectra,}
 \item{automated (or manual) peak picking for each spectrum,
-depending if \code{manual = FALSE} (or \code{TRUE})},
-\item{review of automated peak picking if \code{review = TRUE}}.
+depending if \code{manual = FALSE} (or \code{TRUE}),}
+\item{review of automated peak picking if \code{review = TRUE}.}
 }
 
 These tasks are performed by group and the results are stored in the folder
@@ -64,6 +75,16 @@ match \code{pivot} (the well folders). See \link{import_layout_from_paths.maldi}
 If such a folder contains already analyses saved as \code{stored_peaks.generic}
 or \code{stored_spect.generic}, these analyses can be imported for the next stage;
 if not, the original files are renamed with a timestamp and new files added.
+
+\subsection{Adapting the pipeline}
+
+...
+
+In case \code{FUN_spect} or \code{FUN_peaks} use a function that must determine,
+e.g. which spectra are repeated measurements from a single well, which is
+typically accomplished in the default functions using \link{import_layout_from_paths.maldi},
+the \code{pivot} regex may need to be updated in the corresponding \code{MoreArgs_...}
+arguments as well. A warning is emitted if it is not.
 
 \subsection{Joining with metadata from external plate layout}
 

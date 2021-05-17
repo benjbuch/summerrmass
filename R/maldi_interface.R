@@ -16,17 +16,21 @@
 #' contains metadata associated with each well/group. \code{layout_FUN} is applied
 #' to \code{layout_file} before it is joined with the measurement result. Must
 #' share column names with \link{import_layout_from_paths.maldi}. See Details.
-#' @param FUN The function to be applied for peak detection.
+#' @param FUN_spect,MoreArgs_spect The function to be applied for pre-processing
+#' the mass spectra using \code{MoreArgs_spect}.
+#' @param FUN_peak,MoreArgs_peak The function to be applied for peak detection
+#' using \code{MoreArgs_peak}.
+#' @inheritParams backup_file
 #'
 #' @details
 #' The batch process is split into different stages starting from the selected
 #' \code{path} as main directory:
 #'
 #' \enumerate{
-#' \item{import and pre-processing of the spectra},
+#' \item{import and pre-processing of the spectra,}
 #' \item{automated (or manual) peak picking for each spectrum,
-#' depending if \code{manual = FALSE} (or \code{TRUE})},
-#' \item{review of automated peak picking if \code{review = TRUE}}.
+#' depending if \code{manual = FALSE} (or \code{TRUE}),}
+#' \item{review of automated peak picking if \code{review = TRUE}.}
 #' }
 #'
 #' These tasks are performed by group and the results are stored in the folder
@@ -36,6 +40,16 @@
 #' If such a folder contains already analyses saved as \code{stored_peaks.generic}
 #' or \code{stored_spect.generic}, these analyses can be imported for the next stage;
 #' if not, the original files are renamed with a timestamp and new files added.
+#'
+#' \subsection{Adapting the pipeline}
+#'
+#' ...
+#'
+#' In case \code{FUN_spect} or \code{FUN_peaks} use a function that must determine,
+#' e.g. which spectra are repeated measurements from a single well, which is
+#' typically accomplished in the default functions using \link{import_layout_from_paths.maldi},
+#' the \code{pivot} regex may need to be updated in the corresponding \code{MoreArgs_...}
+#' arguments as well. A warning is emitted if it is not.
 #'
 #' \subsection{Joining with metadata from external plate layout}
 #'
@@ -80,11 +94,14 @@ maldi_batch <- function(path = NULL,
                         confirm_layout_file = TRUE,
                         manual = FALSE,
                         review = TRUE,
-                        FUN = maldi_peaks_by_well,
-                        MoreArgs = list(),
-                        layout_import_FUN = import_layout_from_excel,
+                        FUN_spect = "maldi_average_by_well",
+                        MoreArgs_spect = list(pivot = "[0-9]_[A-Z]+[0-9]+"),
+                        FUN_peaks = "maldi_peaks_by_well",
+                        MoreArgs_peaks = list(pivot = "[0-9]_[A-Z]+[0-9]+"),
+                        layout_import_FUN = "import_layout_from_excel",
                         stored_peaks.generic = "maldi_peaks.rds",
-                        stored_spect.generic = "maldi_specs.rds"
+                        stored_spect.generic = "maldi_specs.rds",
+                        stamp = "%y%m%d"
                         ) {
 
   ##### Determine directory and handling pre-existing files ####################
@@ -99,6 +116,14 @@ maldi_batch <- function(path = NULL,
   path <- normalizePath(path)
 
   setwd(path)
+
+  # check if arguments are properly set
+
+  if (isTRUE(MoreArgs_spect$pivot != pivot)) log_warn(
+    "the `pivot` in `MoreArgs_spect` is different from the global `pivot`")
+
+  if (isTRUE(MoreArgs_peaks$pivot != pivot)) log_warn(
+    "the `pivot` in `MoreArgs_spect` is different from the global `pivot`")
 
   # establish groups
 
@@ -148,6 +173,130 @@ maldi_batch <- function(path = NULL,
 
   log_object(data_in_path)
 
+  for (curr_group_idx in seq_along(data_in_path$path_to_group)) {
+
+    log_line("-")
+    log_task("advancing to sample group", data_in_path$path_to_group[[curr_group_idx]])
+
+    # as stringr::str_remove was used to create the shorthand, we don't need to
+    # call file.path(...) here
+
+    curr_group <- data_in_path$path_to_group[[curr_group_idx]]
+    curr_group_path <- paste0(path, curr_group)
+
+    # check if spectra and/or peak backup file exists; ask whether to import or
+    # not
+
+    has_s <- !is.na(data_in_path[curr_group_idx, "processed_spectra_rds"])
+    has_p <- !is.na(data_in_path[curr_group_idx, "processed_spectra_rds"])
+
+    # in non-interactive mode, use the backups by default
+
+    use_s <- !interactive() & has_s
+    use_p <- !interactive() & has_p
+
+    if (interactive() && has_s) {
+
+      Sys.sleep(1)
+
+      if (has_p) {
+
+        use_p <- rstudioapi::showQuestion(
+          paste0("Import All Backup Files for ", sQuote(curr_group), "?"),
+          paste("Processed mass spectra and peak assignment has been backed up for this sample group. Do you want to proceed with both backups and skip importing of the raw spectra and peak detection?
+            "), ok = "Yes", cancel = "No")
+
+        if (!use_p) {
+
+          use_s <- rstudioapi::showQuestion(
+            paste("Import Mass Spectra for", sQuote(curr_group), "from Backup?"),
+            paste("Do you want to proceed with the backup of the processed mass spectra and skip importing the raw spectra?
+              "), ok = "Yes", cancel = "No")
+
+        } else {
+
+          use_s <- TRUE  # if peaks are imported, always use the spectra
+
+        }
+
+      } else {
+
+        use_s <- rstudioapi::showQuestion(
+          paste("Import Mass Spectra for", sQuote(curr_group), "from Backup?"),
+          paste("Do you want to proceed with the backup of the processed mass spectra and skip importing the raw spectra?
+              "), ok = "Yes", cancel = "No")
+
+      }
+
+    }
+
+    ##### Import or (Re-)Process Files #########################################
+
+    # processing spectra
+
+    pth_s <- normalizePath(file.path(curr_group_path, stored_spect.generic))
+
+    if (use_s) {
+
+      dat_s <- readRDS(file = pth_s); attr(dat_s, "dir") <- pth_s
+
+      log_process("imported", length(rds_s), "spectra from backup")
+
+    } else {
+
+      # keep a backup of existing spectra or peak files
+      if (has_s) backup_file(file.path(curr_group_path, stored_spect.generic))
+
+      err_s <- tryCatch({
+
+        dat_s <- maldi_import_spectra(path = curr_group_path)
+
+        eval(rlang::call2(FUN_spect, object = dat_s, !!!MoreArgs_spect))
+
+        saveRDS(object = dat_s, file = pth_s)
+
+        use_p <- FALSE
+
+        FALSE
+
+      }, error = function(e) {
+
+        log_message("Something went wrong in this group. Let's move on.")
+
+        TRUE
+
+      })
+
+      if (err_s) {
+
+        log_line("=")
+        next
+
+      }
+
+    }
+
+    # processing peaks
+
+    pth_p <- normalizePath(file.path(curr_group_path, stored_peaks.generic))
+
+    if (use_p) {
+
+      dat_p <- readRDS(file = pth_p)
+
+      log_process("imported", scales::comma(sum(lengths(dat_p))),
+                  "peak assignments from backup")
+
+    } else {
+
+      # keep a backup of existing spectra or peak files
+      if (has_p) backup_file(file.path(curr_group_path, stored_peaks.generic))
+
+
+    }
+
+
+  } ### end of for each group loop
 
 }
 
