@@ -15,6 +15,9 @@ backup_file(path, sep = "_", stamp = "\%y\%m\%d")
 to this specification (\link[base:strptime]{POSIXct}) is added to pre-existing
 files in path.}
 }
+\value{
+\code{TRUE} if succesful, \code{FALSE} otherwise.
+}
 \description{
 Backup a file if necessary
 }
