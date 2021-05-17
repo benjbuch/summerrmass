@@ -136,6 +136,16 @@ log_object <- function(object) {
 
 }
 
+#' Issuing of warnings
+#'
+#' @param  ... message
+#' @noRd
+log_warn <- function(...) {
+
+  rlang::warn(message = paste0(...))
+
+}
+
 #' Handling of errors
 #'
 #' @param header A concise description of the error.
