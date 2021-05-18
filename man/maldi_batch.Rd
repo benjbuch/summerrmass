@@ -11,11 +11,14 @@ maldi_batch(
   confirm_layout_file = TRUE,
   manual = FALSE,
   review = TRUE,
-  FUN_spect = "maldi_average_by_well",
+  FUN_spect = maldi_average_by_well,
   MoreArgs_spect = list(pivot = "[0-9]_[A-Z]+[0-9]+"),
-  FUN_peaks = "maldi_peaks_by_well",
+  FUN_peaks = maldi_find_peaks_by_well,
   MoreArgs_peaks = list(pivot = "[0-9]_[A-Z]+[0-9]+"),
-  layout_import_FUN = "import_layout_from_excel",
+  FUN_draw = maldi_draw_peaks_by_well,
+  MoreArgs_draw = list(),
+  FUN_import_layout = import_layout_from_excel,
+  MoreArgs_layout = list(),
   stored_peaks.generic = "maldi_peaks.rds",
   stored_spect.generic = "maldi_specs.rds",
   stamp = "\%y\%m\%d"
@@ -29,7 +32,7 @@ may contain the plate layout(s).}
 name of a single folder in each tree up to which "groups" and from which
 "replicates" are established. See Details.}
 
-\item{layout_file, confirm_layout_file, layout_import_FUN}{Path to a file that
+\item{layout_file, confirm_layout_file, FUN_import_layout}{Path to a file that
 contains metadata associated with each well/group. \code{layout_FUN} is applied
 to \code{layout_file} before it is joined with the measurement result. Must
 share column names with \link{import_layout_from_paths.maldi}. See Details.}
@@ -41,12 +44,12 @@ share column names with \link{import_layout_from_paths.maldi}. See Details.}
 \item{FUN_spect, MoreArgs_spect}{The function to be applied for pre-processing
 the mass spectra using \code{MoreArgs_spect}.}
 
+\item{FUN_peaks, MoreArgs_peaks}{The function to be applied for peak detection
+using \code{MoreArgs_peak}.}
+
 \item{stamp}{A datestamp (default) and/or timestamp constructed according
 to this specification (\link[base:strptime]{POSIXct}) is added to pre-existing
 files in path.}
-
-\item{FUN_peak, MoreArgs_peak}{The function to be applied for peak detection
-using \code{MoreArgs_peak}.}
 }
 \value{
 A list with one element for each group.
@@ -76,9 +79,12 @@ If such a folder contains already analyses saved as \code{stored_peaks.generic}
 or \code{stored_spect.generic}, these analyses can be imported for the next stage;
 if not, the original files are renamed with a timestamp and new files added.
 
-\subsection{Adapting the pipeline}
+\subsection{Adapting the pipeline}{
 
 ...
+
+\code{FUN_spect}, \code{FUN_peaks} and \code{layout_import_FUN} is can be of
+type character or closure.
 
 In case \code{FUN_spect} or \code{FUN_peaks} use a function that must determine,
 e.g. which spectra are repeated measurements from a single well, which is
@@ -86,7 +92,9 @@ typically accomplished in the default functions using \link{import_layout_from_p
 the \code{pivot} regex may need to be updated in the corresponding \code{MoreArgs_...}
 arguments as well. A warning is emitted if it is not.
 
-\subsection{Joining with metadata from external plate layout}
+}
+
+\subsection{Joining with metadata from external plate layout}{
 
 If \code{layout_file} is \code{NULL}, the results will not be joined with an
 external file that holds associated metadata. (Skip this section.)
@@ -116,4 +124,6 @@ table with a column "well" and "content".
 
 If you provide such a (long) table directly, provide \code{\link{readxl::read_excel}}
 or another appropriate function as argument \code{layout_import_FUN}.
+
+}
 }
