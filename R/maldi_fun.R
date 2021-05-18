@@ -625,6 +625,8 @@ maldi_draw_peaks_by_well <- function(object, data_peaks, file,
 
   }
 
+  log_debugging("exited graphics device to plot peaks")
+
 }
 
 
