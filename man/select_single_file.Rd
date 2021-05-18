@@ -6,7 +6,7 @@
 \usage{
 select_single_file(
   path = getwd(),
-  prefix = "*.+",
+  prefix = ".+",
   suffix = "*",
   pattern = NULL,
   filetype = "file",

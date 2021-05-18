@@ -232,13 +232,15 @@ select_directory <- function(path = getwd(), caption = "Select a directory",
 #' if multiple files were found.
 #'
 #' @export
-select_single_file <- function(path = getwd(), prefix = "*.+", suffix = "*",
+select_single_file <- function(path = getwd(), prefix = ".+", suffix = "*",
                                pattern = NULL, filetype = "file",
                                caption = "Select a", label = "Select") {
 
   if (is.null(pattern)) {
 
-    pattern <- paste0(prefix, "\\.", suffix, "$")
+    pattern <- ifelse(suffix == "*",
+                      paste0(prefix),
+                      paste0(prefix, "\\.", suffix, "$"))
 
   }
 
