@@ -584,32 +584,40 @@ import_layout_from_paths <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
 
     relative_to <- ""
 
-    # determine common basis and replace with "."
+    if (nrow(datad) == 1) {
 
-    folderlist <- stringr::str_split(datad$value, pattern = .Platform$file.sep,
-                                     simplify = TRUE)
+      relative_to <- stringr::str_extract(datad$value, paste0("^.+(?=", pivot, ")"))
 
-    log_debugging("initial folder list", object = folderlist)
+    } else {
 
-    foldersame <- apply(folderlist, MARGIN = 2, FUN = dplyr::n_distinct)
+      # determine common basis and replace with "."
 
-    # browser()
+      folderlist <- stringr::str_split(datad$value, pattern = .Platform$file.sep,
+                                       simplify = TRUE)
 
-    if (foldersame[1] == 1) {
+      log_debugging("initial folder list", object = folderlist)
 
-      # Beware that which(foldersame == 1) may be true for elements after the
-      # pivot has been identified. This is why we do it more "complicated".
-      #
-      # We omit the last common element to account for such cases in which also
-      # the pivot itself is identical for all elements (and only differences in
-      # the replicates exist).
+      foldersame <- apply(folderlist, MARGIN = 2, FUN = dplyr::n_distinct)
 
-      foldersame <- folderlist[1, which(cumsum(abs(diff(foldersame))) == 0)]
+      # browser()
 
-      log_debugging("common folder list", object = foldersame)
+      if (foldersame[1] == 1) {
 
-      if (length(foldersame) > 0) relative_to <- paste0(
-        foldersame, collapse = .Platform$file.sep)
+        # Beware that which(foldersame == 1) may be true for elements after the
+        # pivot has been identified. This is why we do it more "complicated".
+        #
+        # We omit the last common element to account for such cases in which also
+        # the pivot itself is identical for all elements (and only differences in
+        # the replicates exist).
+
+        foldersame <- folderlist[1, which(cumsum(abs(diff(foldersame))) == 0)]
+
+        log_debugging("common folder list", object = foldersame)
+
+        if (length(foldersame) > 0) relative_to <- paste0(
+          foldersame, collapse = .Platform$file.sep)
+
+      }
 
     }
 
