@@ -540,6 +540,8 @@ maldi_find_peaks_by_well <- function(object,
 #' must be a subset of \code{object}.
 #' @param ncol Number of plot columns to arrange per page.
 #' @param nrow Number of plot rows to arrange per page.
+#' @param dev_off Should \code{\link[grDevices:dev]{dev.off}} be called after the
+#' function exits?
 #'
 #' @details
 #' No checking is done whether \code{data_peaks} was indeed derived from \code{object}.
@@ -566,7 +568,8 @@ maldi_draw_peaks_by_well <- function(object, data_peaks, file,
                                      ncol = 2, nrow = 6,
                                      highlight_missing_peaks = TRUE,
                                      width = 21.5 / 2.54, height = 30.5 / 2.54,
-                                     paper = "a4") {
+                                     paper = "a4",
+                                     dev_off = TRUE) {
 
   log_debugging("entered graphics device to plot peaks", object = data_peaks)
 
@@ -579,12 +582,12 @@ maldi_draw_peaks_by_well <- function(object, data_peaks, file,
     dplyr::summarize(needs_check = dplyr::n_distinct(.data$ion), .data$findex,
                      .groups = "keep")
 
+  op <- par(no.readonly = TRUE)
+  on.exit(par(op))  # reconstitute par settings
+
   grDevices::pdf(file = file, width = width, height = height, paper = paper)
 
-  # reconstitute par settings afterwards
-
-  op <- par(no.readonly = TRUE)
-  on.exit(par(op))
+  if (dev_off) on.exit(dev.off(), add = TRUE, after = TRUE)  # close device
 
   graphics::par(mfcol = c(nrow + 1, ncol), mar = c(0, 2, 0, 1), oma = c(2, 2, 4, 2))
 
@@ -631,8 +634,6 @@ maldi_draw_peaks_by_well <- function(object, data_peaks, file,
     if ((i %% (par("mfcol")[1] - 1)) == 0) plot.new()
 
   }
-
-  dev.off()
 
 }
 

@@ -14,7 +14,8 @@ maldi_draw_peaks_by_well(
   highlight_missing_peaks = TRUE,
   width = 21.5/2.54,
   height = 30.5/2.54,
-  paper = "a4"
+  paper = "a4",
+  dev_off = TRUE
 )
 }
 \arguments{
@@ -62,6 +63,9 @@ must be a subset of \code{object}.}
     if that is set and as \code{"a4"} if it is unset or empty.
     Defaults to \code{"special"}.
   }
+
+\item{dev_off}{Should \code{\link[grDevices:dev]{dev.off}} be called after the
+function exits?}
 }
 \description{
 Draws spectra and places them on a pdf page for printing.
