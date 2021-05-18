@@ -128,3 +128,14 @@ or another appropriate function as argument \code{layout_import_FUN}.
 
 }
 }
+\examples{
+maldi_batch(
+  MoreArgs_spect = list(pivot = "[0-9]_[A-Z]+[0-9]+",
+                        final_trim_range = c(2420, 2445)),
+  MoreArgs_peaks = list(pivot = "[0-9]_[A-Z]+[0-9]+",
+                        mass_list = c(mC = 2425, hmC = 2441, fC = 2439),
+                        tolerance_assignment = 0.5,
+                        SNR = 3),
+  MoreArgs_layout = list(ncol = 2, nrow = 6))
+
+}
