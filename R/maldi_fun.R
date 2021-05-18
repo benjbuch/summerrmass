@@ -516,6 +516,116 @@ maldi_find_peaks_by_well <- function(object,
                                        "n_replicates", "findex", "gindex")),
                   tidyselect::everything())
 
+  attr(data_peaks, "SNR") <- SNR
+
+  data_peaks
+
+}
+
+#' Draw m/z peaks in spectra
+#'
+#' Draws spectra and places them on a pdf page for printing.
+#'
+#' @inheritParams maldi_get_paths
+#' @inheritParams grDevices::pdf
+#' @param data_peaks A peak data table as returned by \link{maldi_find_peaks_by_well};
+#' must be a subset of \code{object}.
+#' @param ncol Number of plot columns to arrange per page.
+#' @param nrow Number of plot rows to arrange per page.
+#'
+#' @details
+#' No checking is done whether \code{data_peaks} was indeed derived from \code{object}.
+#' However, \code{data_peaks} must contain a column \code{findex} which points to
+#' the index of corresponding spectrum in \code{object}.
+#'
+#' @examples
+#' data("BobCAT")
+#'
+#' my_masses <- c(ion_species_A = 2425, ion_species_B = 2441)
+#'
+#' # trim the spectra during averaging to speed-up the peak detection; alternatively
+#' # use MALDIquant::trim(...).
+#' my_spectrum <- maldi_average_by_well(BobCAT, final_trim_range = c(2420, 2445))
+#' # detect peaks at the masses
+#' my_peaks <- maldi_find_peaks_by_well(my_spectrum, my_masses)
+#'
+#' @importFrom magrittr %>%
+#' @importFrom rlang .data
+#'
+#' @export
+maldi_draw_peaks_by_well <- function(object, data_peaks, file,
+                                     title = NULL,
+                                     ncol = 2, nrow = 6,
+                                     highlight_missing_peaks = TRUE,
+                                     width = 21.5 / 2.54, height = 30.5 / 2.54,
+                                     paper = "a4") {
+
+  log_debugging("entered graphics device to plot peaks", object = data_peaks)
+
+  curr_specs <- data_peaks %>%
+    dplyr::summarize(.data$findex, .data$replicate, .groups = "keep") %>%
+    dplyr::distinct()
+
+  curr_check <- data_peaks %>%
+    dplyr::filter(is.na(.data$mass)) %>%
+    dplyr::summarize(needs_check = dplyr::n_distinct(.data$ion), .data$findex,
+                     .groups = "keep")
+
+  grDevices::pdf(file = file, width = width, height = height, paper = paper)
+
+  # reconstitute par settings afterwards
+
+  op <- par(no.readonly = TRUE)
+  on.exit(par(op))
+
+  graphics::par(mfcol = c(nrow + 1, ncol), mar = c(0, 2, 0, 1), oma = c(2, 2, 4, 2))
+
+  for (i in 1:nrow(curr_specs)) {
+
+    MALDIquant::plot(object[[curr_specs$findex[[i]]]],
+                     main = NULL,
+                     xaxt = c("n", "s")[((i %% (par("mfcol")[1] - 1)) == 0 |
+                                           i == nrow(curr_specs)) + 1]
+    )
+    c("n", "s")[(i %% (par()$mfcol[[1]] - 1) == 0 | i == nrow(curr_specs)) + 1]
+    if (curr_specs$findex[[i]] %in% curr_check$findex) rect(
+      par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4],
+      col = adjustcolor("lightgray", alpha.f = 0.5))
+
+    # add signal-to-noise-ratio
+
+    if (!is.null(SNR <- attr(data_peaks, "SNR"))) {
+
+      noise <- MALDIquant::estimateNoise(object[[curr_specs$findex[[i]]]])
+      lines(noise[, 1], noise[, 2] * SNR, col = "red")
+
+    }
+
+    # add peaks
+
+    data_peaks %>%
+      dplyr::filter(findex == curr_specs$findex[[i]]) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(mass, intensity) %>% points(col = "red")
+
+    # mark averaged spectra with an asterisk
+
+    title(paste0(curr_specs$well[[i]], c("", "*")[(i %in% which(
+      is.na(curr_specs$replicate))) + 1]), line = -1.5)
+
+    # page title; can only be set after plot.new has been called
+
+    if (!is.null(title) && i == 1) graphics::mtext(title, line = 1, side = 3,
+                                                   outer = TRUE, adj = 0)
+
+    # need one empty row to show the mz axis (no alternatives)
+
+    if ((i %% (par("mfcol")[1] - 1)) == 0) plot.new()
+
+  }
+
+  dev.off()
+
 }
 
 
