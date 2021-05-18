@@ -85,9 +85,9 @@ maldi_import_spectra <- function(path = getwd(), ...) {
     path = path, pattern = "\\.mzxml", ignore.case = TRUE,
     recursive = TRUE, full.names = TRUE)
 
-  files_fid   <- data.frame(group = list.files(
+  files_fid   <- list.files(
     path = path, pattern = "fid", ignore.case = TRUE,
-    recursive = TRUE, full.names = TRUE))
+    recursive = TRUE, full.names = TRUE)
 
   log_process("found", length(files_fid), "Bruker FID files")
 
@@ -108,7 +108,7 @@ maldi_import_spectra <- function(path = getwd(), ...) {
 
     if (!answer) {
 
-      log_process("processing", length(fids), "Bruker FDI files")
+      log_process("processing", length(fids), "Bruker FID files")
 
       for (i in fids) shell(shQuote(paste("compassxport -a",
                                           shQuote(normalizePath(i), type = "cmd"),
