@@ -91,6 +91,16 @@
 #'
 #' @return A list with one element for each group.
 #'
+#' @examples
+#' maldi_batch(
+#'   MoreArgs_spect = list(pivot = "[0-9]_[A-Z]+[0-9]+",
+#'                         final_trim_range = c(2420, 2445)),
+#'   MoreArgs_peaks = list(pivot = "[0-9]_[A-Z]+[0-9]+",
+#'                         mass_list = c(mC = 2425, hmC = 2441, fC = 2439),
+#'                         tolerance_assignment = 0.5,
+#'                         SNR = 3),
+#'   MoreArgs_layout = list(ncol = 2, nrow = 6))
+#'
 #' @importFrom magrittr %>%
 #' @importFrom rlang .data
 #'
@@ -172,14 +182,15 @@ maldi_batch <- function(path = NULL,
                  path = path, USE.NAMES = TRUE, simplify = FALSE))
   )) %>%
     tidyr::pivot_longer(dplyr::everything(), values_to = "path_to_group") %>%
-    tidyr::unnest("path_to_group") %>%
+    tidyr::unnest("path_to_group", keep_empty = TRUE) %>%
     # make sure to get trimmed dirnames
     dplyr::mutate(path_to_group = stringr::str_remove(.data$path_to_group, path)) %>%
     dplyr::group_by(.data$name, .data$path_to_group) %>%
     dplyr::summarize(status = dplyr::n()) %>%
     tidyr::pivot_wider(names_from = "name", values_from = "status") %>%
-    dplyr::select(c("path_to_group", "raw_fid_files", "raw_xml_files",
-                    "processed_spectra_rds", "processed_peaks_rds"))
+    dplyr::select(tidyselect::any_of(c("path_to_group", "raw_fid_files", "raw_xml_files",
+                                       "processed_spectra_rds", "processed_peaks_rds"))) %>%
+    dplyr::filter(!is.na(.data$path_to_group))
 
   log_process("found", nrow(data_in_path), ifelse(nrow(data_in_path) > 1,
                                                   "groups", "group"))
