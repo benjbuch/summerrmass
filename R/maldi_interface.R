@@ -242,7 +242,7 @@ maldi_batch <- function(path = NULL,
     # not
 
     has_s <- !is.na(data_in_path[curr_group_idx, "processed_spectra_rds"])
-    has_p <- !is.na(data_in_path[curr_group_idx, "processed_spectra_rds"])
+    has_p <- !is.na(data_in_path[curr_group_idx, "processed_peaks_rds"])
 
     # in non-interactive mode, use the backups by default
 
@@ -294,7 +294,7 @@ maldi_batch <- function(path = NULL,
 
       dat_s <- readRDS(file = pth_s); attr(dat_s, "dir") <- curr_group_path
 
-      log_process("imported", length(rds_s), "spectra from backup")
+      log_process("imported", length(dat_s), "spectra from backup")
 
     } else {
 
