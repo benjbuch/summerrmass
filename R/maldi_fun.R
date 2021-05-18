@@ -356,14 +356,14 @@ maldi_average_by_well <- function(object,
 #' @importFrom rlang .data
 #'
 #' @export
-maldi_peaks_by_well <- function(object,
-                                mass_list,
-                                tolerance_assignment = 0.5,
-                                method = "MAD",
-                                SNR = 3,
-                                ...,
-                                manual = FALSE,
-                                pivot = "[0-9]_[A-Z]+[0-9]+") {
+maldi_find_peaks_by_well <- function(object,
+                                     mass_list,
+                                     tolerance_assignment = 0.5,
+                                     method = "MAD",
+                                     SNR = 3,
+                                     ...,
+                                     manual = FALSE,
+                                     pivot = "[0-9]_[A-Z]+[0-9]+") {
 
   pick_peaks_by_hand <- function(s0, s1, p1, cx, mx, tol = tolerance_assignment) {
 
