@@ -373,6 +373,8 @@ maldi_batch <- function(path = NULL,
                         file = normalizePath(file.path(curr_group_path, tmp_pdf)),
                         !!!MoreArgs_draw))
 
+      dev.off()
+
       on.exit()  # clear on.exit
 
       # PEAK DETECTION 2: detect peaks manually
@@ -397,10 +399,15 @@ maldi_batch <- function(path = NULL,
           dat_p.use <- dat_p %>%
             dplyr::filter(!(.data$findex %in% curr_check))
 
+          log_debugging(object = c(MoreArgs_peaks[which(names(MoreArgs_peaks) != "manual")],
+                                   list(manual = TRUE)))
+
           dat_p.new <- eval(rlang::call2(
             FUN_peaks, object = dat_s[curr_check],
             !!!c(MoreArgs_peaks[which(names(MoreArgs_peaks) != "manual")],
                  list(manual = TRUE))))
+
+          log_debugging("new set of peaks generated")
 
           dat_p <- dplyr::bind_rows(dat_p.use, dat_p.new) %>%
             dplyr::arrange(.data$findex)
