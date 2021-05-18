@@ -492,10 +492,11 @@ maldi_find_peaks_by_well <- function(object,
       peaks <- MALDIquant::detectPeaks(object = mass_spectrum,
                                        method = "MAD", SNR = SNR, ...)
 
-      tmp.res <- sapply(smoo_list, MALDIquant::match.closest,
-                        table = MALDIquant::mass(peaks),
-                        tolerance = tolerance_assignment,
-                        nomatch = NA) %>%
+      data_peaks.tmp[[i]] <- sapply(
+        smoo_list, MALDIquant::match.closest,
+        table = MALDIquant::mass(peaks),
+        tolerance = tolerance_assignment,
+        nomatch = NA) %>%
         tibble::as_tibble(rownames = "ion") %>%
         dplyr::mutate(mass = MALDIquant::mass(peaks)[.data$value],
                       intensity = MALDIquant::intensity(peaks)[.data$value]) %>%
@@ -509,7 +510,7 @@ maldi_find_peaks_by_well <- function(object,
 
   }
 
-  maldi_get_paths(object) %>%
+  data_peaks <- maldi_get_paths(object) %>%
     import_layout_from_paths.maldi(pivot = pivot, relative_to = attr(object, "dir")) %>%
     dplyr::left_join(
       data_peaks.tmp %>% dplyr::bind_rows(.id = "findex") %>%
