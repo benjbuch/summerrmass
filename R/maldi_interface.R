@@ -109,6 +109,9 @@ maldi_batch <- function(path = NULL,
                         MoreArgs_draw  = list(),
                         FUN_import_layout = import_layout_from_excel,
                         MoreArgs_layout = list(),
+                        MoreArgs_device = list(width = 21.5 / 2.54,
+                                               height = 30.5 / 2.54,
+                                               paper = "a4"),
                         stored_peaks.generic = "maldi_peaks.rds",
                         stored_spect.generic = "maldi_specs.rds",
                         stamp = "%y%m%d"
@@ -351,9 +354,15 @@ maldi_batch <- function(path = NULL,
 
       tmp_pdf <- paste0(stored_peaks.generic, "_tmp.pdf")
 
+      eval(rlang::call2(grDevices::pdf, file = tmp_pdf, !!!MoreArgs_device))
+
+      on.exit(dev.off(), add = TRUE, after = FALSE)  # close device after plot
+
       eval(rlang::call2(FUN_draw, object = dat_s, data_peaks = dat_p,
                         file = normalizePath(file.path(curr_group_path, tmp_pdf)),
                         !!!MoreArgs_draw))
+
+      on.exit()  # clear on.exit
 
       # PEAK DETECTION 2: detect peaks manually
 
@@ -447,18 +456,12 @@ maldi_batch <- function(path = NULL,
 
       log_process("no plate layout selected")
 
-      # save spectra by
-
     } else {
 
       dat_l <- rlang::call2(FUN_import_layout, file = normalizePath(curr_layout),
                             !!!MoreArgs_layout)
 
       dat_p <- dplyr::full_join(dat_p, dat_l)
-
-      # save spectra by content
-
-
 
     }
 

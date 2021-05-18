@@ -19,6 +19,7 @@ maldi_batch(
   MoreArgs_draw = list(),
   FUN_import_layout = import_layout_from_excel,
   MoreArgs_layout = list(),
+  MoreArgs_device = list(width = 21.5/2.54, height = 30.5/2.54, paper = "a4"),
   stored_peaks.generic = "maldi_peaks.rds",
   stored_spect.generic = "maldi_specs.rds",
   stamp = "\%y\%m\%d"
