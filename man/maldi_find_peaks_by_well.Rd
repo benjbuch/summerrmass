@@ -56,6 +56,16 @@ Peaks are pre-selected from a smoothed spectrum within the m/z range given by
 original, unsmoothed spectrum using \code{\link[MALDIquant:detectPeaks]{MALDIquant::detectPeaks}}.
 }
 \examples{
-my_masses <- c(ion_species_A = 2400, ion_species_B = 2500)
+data("BobCAT")
+
+my_masses <- c(ion_species_A = 2425, ion_species_B = 2441)
+
+# trim the spectra during averaging to speed-up the peak detection; alternatively
+# use MALDIquant::trim(...).
+my_spectrum <- maldi_average_by_well(BobCAT, final_trim_range = c(2420, 2445))
+
+maldi_find_peaks_by_well(my_spectrum, my_masses)  # automatically
+maldi_find_peaks_by_well(my_spectrum, my_masses, manual = TRUE)  # all by hand
+maldi_find_peaks_by_well(my_spectrum, mass_list = c(ion_species_C = 2439))  # tricky ones by hand
 
 }

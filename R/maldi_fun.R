@@ -350,7 +350,17 @@ maldi_average_by_well <- function(object,
 #' @importFrom rlang .data
 #'
 #' @examples
-#' my_masses <- c(ion_species_A = 2400, ion_species_B = 2500)
+#' data("BobCAT")
+#'
+#' my_masses <- c(ion_species_A = 2425, ion_species_B = 2441)
+#'
+#' # trim the spectra during averaging to speed-up the peak detection; alternatively
+#' # use MALDIquant::trim(...).
+#' my_spectrum <- maldi_average_by_well(BobCAT, final_trim_range = c(2420, 2445))
+#'
+#' maldi_find_peaks_by_well(my_spectrum, my_masses)  # automatically
+#' maldi_find_peaks_by_well(my_spectrum, my_masses, manual = TRUE)  # all by hand
+#' maldi_find_peaks_by_well(my_spectrum, mass_list = c(ion_species_C = 2439))  # tricky ones by hand
 #'
 #' @importFrom magrittr %>%
 #' @importFrom rlang .data
@@ -424,23 +434,20 @@ maldi_find_peaks_by_well <- function(object,
 
   for (i in seq_along(object)) {
 
-    mass_spectrum <- object[[i]]
+    smoo_spectrum <- mass_spectrum <- object[[i]]
+    reso_spectrum <- mean(diff(MALDIquant::mass(mass_spectrum)))
+
+    log_debugging("spectrum resolution is", reso_spectrum)
 
     tryCatch({
-
-      spectra_smooth_fwhm <- mass_spectrum %>% MALDIquant::mass() %>%
-        diff %>% mean %>%
-        magrittr::divide_by(e1 = tolerance_assignment, e2 = .) %>%
-        floor()
 
       suppressWarnings({
 
         # warning is: 'Negative intensity values are replaced by zeros.'
 
-        smoo_spectrum <- mass_spectrum %>%
-          MALDIquant::smoothIntensity(
-            method = "SavitzkyGolay",
-            halfWindowSize = spectra_smooth_fwhm)
+        smoo_spectrum <- MALDIquant::smoothIntensity(
+          mass_spectrum, method = "SavitzkyGolay",
+          halfWindowSize = floor(tolerance_assignment / reso_spectrum))
 
       })
 
