@@ -11,11 +11,7 @@ maldi_draw_peaks_by_well(
   title = NULL,
   ncol = 2,
   nrow = 6,
-  highlight_missing_peaks = TRUE,
-  width = 21.5/2.54,
-  height = 30.5/2.54,
-  paper = "a4",
-  dev_off = TRUE
+  highlight_missing_peaks = TRUE
 )
 }
 \arguments{
@@ -24,48 +20,9 @@ maldi_draw_peaks_by_well(
 \item{data_peaks}{A peak data table as returned by \link{maldi_find_peaks_by_well};
 must be a subset of \code{object}.}
 
-\item{file}{a character string giving the file path.
-    If it is of the form \code{"|cmd"}, the output is piped to the
-    command given by \command{cmd}.  If it is \code{NULL},
-    then no external file is created (effectively, no drawing occurs),
-    but the device may still be queried (e.g., for size of text).
-
-    For use with \code{onefile = FALSE} give a C integer format such
-    as \code{"Rplot\%03d.pdf"} (the default in that case).
-    (See \code{\link[grDevices]{postscript}} for further details.)
-
-    Tilde expansion (see \code{\link{path.expand}}) is done. An input with
-    a marked encoding is converted to the native encoding or an error is
-    given.
-  }
-
-\item{title}{title string to embed as the \samp{/Title} field in the
-    file.  Defaults to \code{"R Graphics Output"}.}
-
 \item{ncol}{Number of plot columns to arrange per page.}
 
 \item{nrow}{Number of plot rows to arrange per page.}
-
-\item{width}{the width and height of the graphics region in
-    inches.  The default values are \code{7}.}
-
-\item{height}{the width and height of the graphics region in
-    inches.  The default values are \code{7}.}
-
-\item{paper}{the target paper size.  The choices are
-    \code{"a4"}, \code{"letter"}, \code{"legal"} (or \code{"us"}) and
-    \code{"executive"} (and these can be capitalized), or \code{"a4r"}
-    and \code{"USr"} for rotated (\sQuote{landscape}).
-    The default is \code{"special"}, which means that the \code{width}
-    and \code{height} specify the paper size.  A further choice is
-    \code{"default"}; if this is selected, the
-    papersize is taken from the option \code{"papersize"}
-    if that is set and as \code{"a4"} if it is unset or empty.
-    Defaults to \code{"special"}.
-  }
-
-\item{dev_off}{Should \code{\link[grDevices:dev]{dev.off}} be called after the
-function exits?}
 }
 \description{
 Draws spectra and places them on a pdf page for printing.
