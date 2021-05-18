@@ -1,4 +1,4 @@
-#' summerrmass
+#' summerrmass-package
 #'
 #' @author Benjamin Buchmuller \email{benjamin.buchmuller@@tu-dortmund.de}
 #'
@@ -51,5 +51,5 @@
 #' tbd
 #'
 #' @docType package
-#' @name summerrmass
+#' @name summerrmass-package
 NULL
