@@ -45,7 +45,7 @@ str_first_up <- function(x) {
 #' @param char the character to repeat
 #' @param line the length of the line
 #' @noRd
-log_line <- function(char = "=", line = 68) {
+log_line <- function(char = "=", line = getOption("width")) {
 
   if (getOption("summerr.log", default = TRUE)) {
 
