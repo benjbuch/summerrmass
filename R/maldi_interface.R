@@ -10,8 +10,10 @@
 #' @param path Directory with mass spectra to analyze, store and import results;
 #' may contain the plate layout(s).
 #' @inheritParams import_layout_from_paths.maldi
-#' @param manual ...
-#' @param review ...
+#' @param manual Do you want to assign peaks manually in the first place or automatically?
+#' (If )
+#' @param review Do you want to review again all automatically assigned peaks?
+#' (Requires RStudio.)
 #' @param layout_file,confirm_layout_file,FUN_import_layout Path to a file that
 #' contains metadata associated with each well/group. \code{layout_FUN} is applied
 #' to \code{layout_file} before it is joined with the measurement result. Must
@@ -89,7 +91,8 @@
 #'
 #' }
 #'
-#' @return A list with one element for each group.
+#' @return A list of two lists, named \code{$spectra} and \code{$peaks}, which
+#' themselves contain one element (of spectra lists or data.frames) for each group.
 #'
 #' @examples
 #' maldi_batch(
@@ -99,7 +102,10 @@
 #'                         mass_list = c(mC = 2425, hmC = 2441, fC = 2439),
 #'                         tolerance_assignment = 0.5,
 #'                         SNR = 3),
-#'   MoreArgs_layout = list(ncol = 2, nrow = 6))
+#'   MoreArgs_draw = list(ncol = 2, nrow = 6),
+#'   MoreArgs_layout = list(meta_row  = c(concentration = "1"),
+#'                          meta_col  = character())
+#'   )
 #'
 #' @importFrom magrittr %>%
 #' @importFrom rlang .data
@@ -226,6 +232,9 @@ maldi_batch <- function(path = NULL,
     }
 
   }
+
+  all_s <- list()
+  all_p <- list()
 
   for (curr_group_idx in seq_along(data_in_path$path_to_group)) {
 
@@ -399,9 +408,6 @@ maldi_batch <- function(path = NULL,
           dat_p.use <- dat_p %>%
             dplyr::filter(!(.data$findex %in% curr_check))
 
-          log_debugging(object = c(MoreArgs_peaks[which(names(MoreArgs_peaks) != "manual")],
-                                   list(manual = TRUE)))
-
           dat_p.new <- eval(rlang::call2(
             FUN_peaks, object = dat_s[curr_check],
             !!!c(MoreArgs_peaks[which(names(MoreArgs_peaks) != "manual")],
@@ -463,12 +469,12 @@ maldi_batch <- function(path = NULL,
 
       }
 
-      # if none of the above worked out, prompt to select a file; cancelling the
-      # dialogue will keep length(curr_layout) == 0.
-
-      if (is.null(curr_layout)) curr_layout <- select_single_file(path = curr_group)
-
     }
+
+    # if none of the above worked out, prompt to select a file; cancelling the
+    # dialogue will keep length(curr_layout) == 0.
+
+    if (is.null(curr_layout)) curr_layout <- select_single_file(path = curr_group)
 
     if (length(curr_layout) == 0) {
 
@@ -476,19 +482,24 @@ maldi_batch <- function(path = NULL,
 
     } else {
 
-      dat_l <- rlang::call2(FUN_import_layout, file = normalizePath(curr_layout),
-                            !!!MoreArgs_layout)
+      dat_l <- eval(rlang::call2(FUN_import_layout, file = normalizePath(curr_layout),
+                                 !!!MoreArgs_layout))
 
       dat_p <- dplyr::full_join(dat_p, dat_l)
 
     }
 
-    data_in_path[i, "data_spectra"] <- dat_s
-    data_in_path[i, "data_peaks"] <- dat_p
+    all_s[[curr_group_idx]] <- dat_s
+    all_p[[curr_group_idx]] <- dat_p
 
-    log_line("-")
+    log_line("=")
 
   } ### end of for each group loop
+
+  names(all_s) <- data_in_path$path_to_group
+  names(all_p) <- data_in_path$path_to_group
+
+  list(spectra = all_s, peaks = all_p)
 
 }
 

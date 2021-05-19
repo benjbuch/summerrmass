@@ -38,9 +38,11 @@ contains metadata associated with each well/group. \code{layout_FUN} is applied
 to \code{layout_file} before it is joined with the measurement result. Must
 share column names with \link{import_layout_from_paths.maldi}. See Details.}
 
-\item{manual}{...}
+\item{manual}{Do you want to assign peaks manually in the first place or automatically?
+(If )}
 
-\item{review}{...}
+\item{review}{Do you want to review again all automatically assigned peaks?
+(Requires RStudio.)}
 
 \item{FUN_spect, MoreArgs_spect}{The function to be applied for pre-processing
 the mass spectra using \code{MoreArgs_spect}.}
@@ -53,7 +55,8 @@ to this specification (\link[base:strptime]{POSIXct}) is added to pre-existing
 files in path.}
 }
 \value{
-A list with one element for each group.
+A list of two lists, named \code{$spectra} and \code{$peaks}, which
+themselves contain one element (of spectra lists or data.frames) for each group.
 }
 \description{
 This function is to control the flow of actions when batch processing a
@@ -136,6 +139,9 @@ maldi_batch(
                         mass_list = c(mC = 2425, hmC = 2441, fC = 2439),
                         tolerance_assignment = 0.5,
                         SNR = 3),
-  MoreArgs_layout = list(ncol = 2, nrow = 6))
+  MoreArgs_draw = list(ncol = 2, nrow = 6),
+  MoreArgs_layout = list(meta_row  = c(concentration = "1"),
+                         meta_col  = character())
+  )
 
 }
