@@ -6,33 +6,37 @@
 #'
 #' @description
 #'
-#' Import and analyse peaks from MALDI spectra.
+#' Import and analyze peaks from MALDI mass spectra.
 #'
-#' @section Hints:
+#' @details
 #'
-#' \itemize{
-#' \item{Verbose "logging" can be turned on/off by setting \code{options(summerr.log = TRUE)},
-#' which will print messages related to the current stage of the analysis.}
-#' \item{Turn on messages for debugging with \code{options(summerr.debug = TRUE)}.}
-#' }
+#' This package makes heavily use of \link{MALDIquant}. It
+#' combines the functionality to pre-assembled "pipelines" that can be readily
+#' used to batch process (nested) direcotries containing data from measurments
+#' of plates. Each directory can be associated with a user-specified plate layout.
+#' The metadata can be used in further analysis steps.
 #'
 #' @section General Functions:
 #'
 #' (These may be moved to a general package.)
 #'
-#' \subsection{Interaction}{
+#' \subsection{File and Directory Operations}{
 #'
 #' \link{select_directory}
 #'
 #' \link{select_single_file}
 #'
+#' \link{backup_file}
+#'
 #' } % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 #'
-#' \subsection{Import Experiment Layouts}{
+#' \subsection{Importing Experiment Layouts}{
 #'
 #' \link{import_layout_from_excel}
 #'
 #' \link{import_layout_from_paths}
+#'
+#' \link{display_plate_layout}
 #'
 #' } % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 #'
@@ -44,11 +48,24 @@
 #'
 #' @section Routines for MALDI peak calling from Burker FlexAnalysis:
 #'
-#' tbd
+#' \link{maldi_import_spectra}
+#'
+#' \link{maldi_average_spectra} is extended by \link{maldi_average_by_well}
+#'
+#' \link{maldi_find_peaks_by_well} and \link{maldi_draw_peaks_by_well}
+#'
+#' \link{maldi_tapply} a general wrapper to extend/apply functions over groups
+#' such as wells
+#'
+#' \subsection{Convenience Wrappers}{
+#'
+#' \link{maldi_get_paths}
+#'
+#' }
 #'
 #' @section Interactive Workflows:
 #'
-#' tbd
+#' \link{maldi_batch}
 #'
 #' @docType package
 #' @name summerrmass-package
