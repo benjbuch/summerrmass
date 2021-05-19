@@ -22,5 +22,9 @@ files in path.}
 Backup a file if necessary
 }
 \details{
-
+The stamp is extracted from an existing file's modification time.
+For details \link[base:file.info]{file.mtime(...)}.
+If a backup file with the same stamp exists, it is replaced In practical terms
+this means that by using \code{"\%y\%m\%d"} as stamp, only the last backup per
+day is preserved.
 }
