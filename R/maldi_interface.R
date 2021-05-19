@@ -205,7 +205,7 @@ maldi_batch <- function(path = NULL,
 
   # look for plate layout file in main path
 
-  curr_layout <- NULL
+  global_layout <- NULL
 
   if (!is.null(layout_file)) {
 
@@ -219,13 +219,13 @@ maldi_batch <- function(path = NULL,
         use_layout_file <- askYesNo(paste("Do you want to apply", sQuote(layout_file),
                                           "as layout to all groups in the directory?"))
 
-        if (use_layout_file) curr_layout <- normalizePath(layout_file)
+        if (use_layout_file) global_layout <- normalizePath(layout_file)
 
       } else {
 
         # just take it
 
-        curr_layout <- normalizePath(layout_file)
+        global_layout <- normalizePath(layout_file)
 
       }
 
@@ -246,6 +246,8 @@ maldi_batch <- function(path = NULL,
 
     curr_group <- data_in_path$path_to_group[[curr_group_idx]]
     curr_group_path <- paste0(path, curr_group)
+
+    curr_layout <- global_layout
 
     # check if spectra and/or peak backup file exists; ask whether to import or
     # not
