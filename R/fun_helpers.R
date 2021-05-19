@@ -680,8 +680,10 @@ import_layout_from_paths <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
     # order corresponding to the original argument; if the paths argument was
     # a nested list, we only continue with the topmost entry
     dplyr::mutate(path_to_files = sapply(paths, "[[", 1)) %>%
-    dplyr::mutate(path_to_group = stringr::str_extract(first_paths, paste0(
-      "^.*?", group))) %>%
+    dplyr::mutate(path_to_group = ifelse(nchar(group) > 0, stringr::str_extract(
+      first_paths, paste0("^.*?", group)),
+      # as a result of clean_up_path, a leading file.sep was stripped off
+      paste0(.Platform$file.sep, relative_to))) %>%
     # preserve the file order index
     dplyr::mutate(findex = dplyr::row_number())
 
