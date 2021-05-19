@@ -250,7 +250,7 @@ select_single_file <- function(path = getwd(), prefix = ".+", suffix = "*",
 
   dir_files <- setdiff(dir_files, dirs)
 
-  if (length(dir_files) > 1) {
+  if (length(dir_files) != 1) {
 
     if (interactive()) {
 
@@ -258,7 +258,8 @@ select_single_file <- function(path = getwd(), prefix = ".+", suffix = "*",
 
         dir_files <- rstudioapi::selectFile(
           caption = paste(caption, filetype), label = label,
-          path = path, filter = paste0(filetype, "(*.", suffix, ")"))
+          path = path, filter = ifelse(suffix == "*", "All Files (*)",
+                                       paste0(filetype, "(*.", suffix, ")")))
 
       } else {
 
