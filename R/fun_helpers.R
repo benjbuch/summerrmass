@@ -677,8 +677,9 @@ import_layout_from_paths <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
     dplyr::mutate(group = stringr::str_replace(.data$group, paste0(.Platform$file.sep,
                                                                    "$"), "")) %>%
     # add file paths as provided by the user as long as the table is in the
-    # order corresponding to the original argument
-    dplyr::mutate(path_to_files = paths) %>%
+    # order corresponding to the original argument; if the paths argument was
+    # a nested list, we only continue with the topmost entry
+    dplyr::mutate(path_to_files = sapply(paths, "[[", 1)) %>%
     dplyr::mutate(path_to_group = stringr::str_extract(first_paths, paste0(
       "^.*?", group))) %>%
     # preserve the file order index
