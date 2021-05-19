@@ -138,7 +138,7 @@ maldi_batch <- function(path = NULL,
   old_wd <- getwd()
   on.exit(setwd(old_wd))
 
-  if (is.null(path))  path <- select_directory()
+  if (is.null(path)) path <- select_directory()
 
   # make sure to re-enter the current working directory if anything goes wrong
 
@@ -320,6 +320,8 @@ maldi_batch <- function(path = NULL,
 
         dat_s <- eval(rlang::call2(FUN_spect, object = dat_s, !!!MoreArgs_spect))
 
+        attr(dat_s, "dir") <- curr_group_path
+
         saveRDS(object = dat_s, file = pth_s)
 
         use_p <- FALSE
@@ -334,12 +336,7 @@ maldi_batch <- function(path = NULL,
 
       })
 
-      if (err_s) {
-
-        log_line("=")
-        next
-
-      }
+      if (err_s) {next}
 
       log_process("saving")
 
@@ -388,6 +385,8 @@ maldi_batch <- function(path = NULL,
 
       on.exit()  # clear on.exit
 
+      on.exit(setwd(old_wd))  # reconstitute
+
       # PEAK DETECTION 2: detect peaks manually
 
       if (rstudioapi::isAvailable() && review) {
@@ -410,10 +409,14 @@ maldi_batch <- function(path = NULL,
           dat_p.use <- dat_p %>%
             dplyr::filter(!(.data$findex %in% curr_check))
 
+          dat_s.new <- dat_s[curr_check]
+          attr(dat_s.new, "dir") <- curr_group_path
+
           dat_p.new <- eval(rlang::call2(
-            FUN_peaks, object = dat_s[curr_check],
-            !!!c(MoreArgs_peaks[which(names(MoreArgs_peaks) != "manual")],
-                 list(manual = TRUE))))
+            FUN_peaks, object = dat_s.new,
+            manual = TRUE,
+            !!!MoreArgs_peaks[which(names(MoreArgs_peaks) != "manual")]
+          ))
 
           log_debugging("new set of peaks generated")
 
@@ -476,7 +479,7 @@ maldi_batch <- function(path = NULL,
     # if none of the above worked out, prompt to select a file; cancelling the
     # dialogue will keep length(curr_layout) == 0.
 
-    if (is.null(curr_layout)) curr_layout <- select_single_file(path = curr_group)
+    if (is.null(curr_layout)) curr_layout <- select_single_file(path = curr_group_path)
 
     if (length(curr_layout) == 0) {
 
@@ -487,19 +490,19 @@ maldi_batch <- function(path = NULL,
       dat_l <- eval(rlang::call2(FUN_import_layout, file = normalizePath(curr_layout),
                                  !!!MoreArgs_layout))
 
-      dat_p <- dplyr::full_join(dat_p, dat_l)
+      dat_p <- dplyr::left_join(dat_p, dat_l)
 
     }
 
     all_s[[curr_group_idx]] <- dat_s
     all_p[[curr_group_idx]] <- dat_p
 
-    log_line("=")
-
   } ### end of for each group loop
 
   names(all_s) <- data_in_path$path_to_group
   names(all_p) <- data_in_path$path_to_group
+
+  log_line("=")
 
   list(spectra = all_s, peaks = all_p)
 
