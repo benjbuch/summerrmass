@@ -492,7 +492,37 @@ maldi_batch <- function(path = NULL,
 
       dat_p <- dplyr::left_join(dat_p, dat_l)
 
+      attr(dat_p, "dir") <- curr_group_path
+
     }
+
+    log_process("exporting files")
+
+    backup_file(sub(x = pth_p, ".rds", "-long.csv"))
+    backup_file(sub(x = pth_p, ".rds", "-wide.csv"))
+
+    dat_p %>%
+      tidyr::unnest(.data$path_to_files) %>%
+      dplyr::select(!c(tidyselect::any_of(c("findex", "gindex", "pivot", "file",
+                                            "well_let", "well_num")),
+                       tidyselect::starts_with("sub_"))) %>%
+      dplyr::mutate(dplyr::across(tidyselect::vars_select_helpers$where(is.double),
+                                  round, digits = 4)) %>%
+      readr::write_csv(file = sub(x = pth_p, ".rds", "-long.csv"))
+
+    dat_p %>%
+      dplyr::select(!c(tidyselect::any_of(c("findex", "gindex", "pivot", "file",
+                                            "well_let", "well_num",
+                                            # exclude in addition
+                                            "path_to_files")),
+                       tidyselect::starts_with("sub_"))) %>%
+      tidyr::pivot_wider(names_from = "ion", values_from = c("intensity", "percent",
+                                                             "mass")) %>%
+      dplyr::mutate(dplyr::across(tidyselect::vars_select_helpers$where(is.double),
+                                  round, digits = 4)) %>%
+      readr::write_csv(file = sub(x = pth_p, ".rds", "-wide.csv"))
+
+    # export to object
 
     all_s[[curr_group_idx]] <- dat_s
     all_p[[curr_group_idx]] <- dat_p
