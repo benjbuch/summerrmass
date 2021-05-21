@@ -411,6 +411,10 @@ maldi_batch <- function(path = NULL,
             !!!MoreArgs_peaks[which(names(MoreArgs_peaks) != "manual")]
           ))
 
+          # update findex
+
+          dat_p.new$findex <- curr_check[dat_p.new$findex]
+
           log_debugging("new set of peaks generated")
 
           dat_p <- dplyr::bind_rows(dat_p.use, dat_p.new) %>%
