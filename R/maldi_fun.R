@@ -375,6 +375,8 @@ maldi_find_peaks_by_well <- function(object,
                                      manual = FALSE,
                                      pivot = "[0-9]_[A-Z]+[0-9]+") {
 
+  stopifnot(length(mass_list) > 0)
+
   pick_peaks_by_hand <- function(s0, s1, p1, cx, mx, tol = tolerance_assignment) {
 
     # s0: spectrum as is, for plotting only
@@ -560,7 +562,7 @@ maldi_find_peaks_by_well <- function(object,
 #' @importFrom rlang .data
 #'
 #' @export
-maldi_draw_peaks_by_well <- function(object, data_peaks, file,
+maldi_draw_peaks_by_well <- function(object, data_peaks,
                                      title = NULL,
                                      ncol = 2, nrow = 6,
                                      highlight_missing_peaks = TRUE) {
@@ -605,9 +607,9 @@ maldi_draw_peaks_by_well <- function(object, data_peaks, file,
     # add peaks
 
     data_peaks %>%
-      dplyr::filter(findex == curr_specs$findex[[i]]) %>%
+      dplyr::filter(.data$findex == curr_specs$findex[[i]]) %>%
       dplyr::ungroup() %>%
-      dplyr::select(mass, intensity) %>% points(col = "red")
+      dplyr::select(.data$mass, .data$intensity) %>% points(col = "red")
 
     # mark averaged spectra with an asterisk
 

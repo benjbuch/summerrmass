@@ -376,7 +376,6 @@ maldi_batch <- function(path = NULL,
       eval(rlang::call2(grDevices::pdf, file = tmp_pdf, !!!MoreArgs_device))
 
       eval(rlang::call2(FUN_draw, object = dat_s, data_peaks = dat_p,
-                        file = normalizePath(file.path(curr_group_path, tmp_pdf)),
                         !!!MoreArgs_draw))
 
       dev.off()
