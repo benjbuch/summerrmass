@@ -7,7 +7,6 @@
 maldi_draw_peaks_by_well(
   object,
   data_peaks,
-  file,
   title = NULL,
   ncol = 2,
   nrow = 6,
