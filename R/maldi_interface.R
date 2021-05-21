@@ -375,17 +375,11 @@ maldi_batch <- function(path = NULL,
 
       eval(rlang::call2(grDevices::pdf, file = tmp_pdf, !!!MoreArgs_device))
 
-      on.exit(dev.off(), add = TRUE, after = FALSE)  # close device after plot
-
       eval(rlang::call2(FUN_draw, object = dat_s, data_peaks = dat_p,
                         file = normalizePath(file.path(curr_group_path, tmp_pdf)),
                         !!!MoreArgs_draw))
 
       dev.off()
-
-      on.exit()  # clear on.exit
-
-      on.exit(setwd(old_wd))  # reconstitute
 
       # PEAK DETECTION 2: detect peaks manually
 
