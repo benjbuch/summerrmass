@@ -776,3 +776,73 @@ display_plate_layout <- function(layout, ...) {
     )
 
 }
+
+#' Wrapper: Augment
+#'
+#' Passes a quoted expression to \code{\link[broom:augment]{broom::augment}}.
+#' Errors are caught and an empty \code{tibble} is returned.
+#'
+#' @param expr A quoted model object or other R object with information.
+#' @inheritDotParams generics::augment
+#'
+#' @details
+#' Note that you must pre-built the formula before passing it as \code{expr}.
+#'
+#' @examples
+#' \dontrun{
+#' FUN <- my_builder()
+#' wrap_augment(FUN, ...)
+#' }
+#'
+#' @export
+wrap_augment <- function(expr, ...) {
+
+  tryCatch({
+
+    broom::augment(eval(expr), ...)
+
+  }, error = function(e) {
+
+    log_debugging(e)
+
+    tibble::tibble()
+
+  })
+
+}
+
+
+#' Wrapper: Tidy
+#'
+#' Passes a quoted expression to \code{\link[broom:augment]{broom::tidy}}.
+#' Errors are caught and an empty \code{tibble} is returned.
+#'
+#' @param expr A quoted model object or other R object with information.
+#' @inheritDotParams generics::tidy
+#'
+#' @details
+#' Note that you must pre-built the formula before passing it as \code{expr}.
+#'
+#' @examples
+#' \dontrun{
+#' FUN <- my_builder()
+#' wrap_augment(FUN, ...)
+#' }
+#'
+#' @export
+wrap_tidy <- function(expr, ...) {
+
+  tryCatch({
+
+    broom::tidy(eval(expr), ...)
+
+  }, error = function(e) {
+
+    log_debugging(e)
+
+    tibble::tibble()
+
+  })
+
+}
+
