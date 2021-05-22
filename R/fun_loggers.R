@@ -44,6 +44,8 @@ str_first_up <- function(x) {
 #'
 #' @param char the character to repeat
 #' @param line the length of the line
+#'
+#' @export
 #' @noRd
 log_line <- function(char = "=", line = getOption("width")) {
 
@@ -58,6 +60,8 @@ log_line <- function(char = "=", line = getOption("width")) {
 #' Logging of tasks
 #'
 #' @param ... message
+#'
+#' @export
 #' @noRd
 log_task <- function(...) {
 
@@ -77,6 +81,8 @@ log_task <- function(...) {
 #' Sub-routines performed under the headline of the current task.
 #'
 #' @param ... message
+#'
+#' @export
 #' @noRd
 log_process <- function(...) {
 
@@ -93,6 +99,8 @@ log_process <- function(...) {
 #' Logging of process completion
 #'
 #' @param ... message
+#'
+#' @export
 #' @noRd
 log_done <- function() {
 
@@ -106,6 +114,7 @@ log_done <- function() {
 #' Anything else.
 #'
 #' @param ... message
+#'
 #' @noRd
 log_message <- function(...) {
 
