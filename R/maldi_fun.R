@@ -587,20 +587,21 @@ maldi_draw_peaks_by_well <- function(object, data_peaks,
 
     MALDIquant::plot(object[[curr_specs$findex[[i]]]],
                      main = NULL,
-                     xaxt = c("n", "s")[((i %% (par("mfcol")[1] - 1)) == 0 |
+                     xaxt = c("n", "s")[((i %% (graphics::par("mfcol")[1] - 1)) == 0 |
                                            i == nrow(curr_specs)) + 1]
     )
-    c("n", "s")[(i %% (par()$mfcol[[1]] - 1) == 0 | i == nrow(curr_specs)) + 1]
-    if (curr_specs$findex[[i]] %in% curr_check$findex) rect(
-      par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4],
-      col = adjustcolor("lightgray", alpha.f = 0.5))
+
+    if (highlight_missing_peaks && curr_specs$findex[[i]] %in% curr_check$findex) graphics::rect(
+      graphics::par("usr")[1], graphics::par("usr")[3],
+      graphics::par("usr")[2], graphics::par("usr")[4],
+      col = grDevices::adjustcolor("lightgray", alpha.f = 0.5))
 
     # add signal-to-noise-ratio
 
     if (!is.null(SNR <- attr(data_peaks, "SNR"))) {
 
       noise <- MALDIquant::estimateNoise(object[[curr_specs$findex[[i]]]])
-      lines(noise[, 1], noise[, 2] * SNR, col = "red")
+      graphics::lines(noise[, 1], noise[, 2] * SNR, col = "red")
 
     }
 
@@ -609,11 +610,11 @@ maldi_draw_peaks_by_well <- function(object, data_peaks,
     data_peaks %>%
       dplyr::filter(.data$findex == curr_specs$findex[[i]]) %>%
       dplyr::ungroup() %>%
-      dplyr::select(.data$mass, .data$intensity) %>% points(col = "red")
+      dplyr::select(.data$mass, .data$intensity) %>% graphics::points(col = "red")
 
     # mark averaged spectra with an asterisk
 
-    title(paste0(curr_specs$well[[i]], c("", "*")[(i %in% which(
+    graphics::title(paste0(curr_specs$well[[i]], c("", "*")[(i %in% which(
       is.na(curr_specs$replicate))) + 1]), line = -1.5)
 
     # page title; can only be set after plot.new has been called
@@ -623,7 +624,7 @@ maldi_draw_peaks_by_well <- function(object, data_peaks,
 
     # need one empty row to show the mz axis (no alternatives)
 
-    if ((i %% (par("mfcol")[1] - 1)) == 0) plot.new()
+    if ((i %% (graphics::par("mfcol")[1] - 1)) == 0) graphics::plot.new()
 
   }
 
