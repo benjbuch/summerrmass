@@ -65,7 +65,7 @@ most presets for your information. The arguments which you are most likely to
 adapt to your own needs are indicated with `(*)`.
 
 ```{r batch_import, eval=FALSE}
-maldi_data <- maldi_batch(
+data_maldi <- maldi_batch(
   path  = NULL,  # will prompt for the direcotry to analyze
   layout_file = NULL,  # will prompt for each sample group
   pivot = "[0-9]_[A-Z]+[0-9]+",  # regex to match the "well" folders (*)
@@ -180,10 +180,72 @@ A convenient way is to provide the layout as Excel sheet. Please refer to
 provide to the function via `MoreArgs_layout`. In case you want to use a different
 specification, feel free to feed another function to `FUN_import_layout = ...`.
 
-### Final result
+### Returned object
 
-Once `maldi_batch(...)` has finished, `maldi_data` contains two lists, one with
+Once `maldi_batch(...)` has finished, `data_maldi` contains two lists, one with
 the spectra and one with the peaks and associated layout.
+
+```{r include=FALSE}
+data_maldi <- readRDS("data_maldi.rds")
+```
+
+```{r}
+lengths(data_maldi)  # each list contains the result of 1 group
+
+lapply(data_maldi, lengths)  # 12 spectra 
+
+head(data_maldi$peaks[[1]])
+```
+
+## Creating a resume file
+
+With the data at hand, we want to arrange the spectra per compound on a single 
+page in a PDF document. In a future version, this could be expanded to arrange
+the plots automatically by increasing/decreasing concentration in rows etc.
+
+```{r eval=FALSE, include=TRUE}
+for (group in seq_along(data_maldi$peaks)) {
+  
+  pdf(file = file.path(attr(data_maldi$spectra[[group]], "dir"), 
+                       "overview_by_compound.pdf"),
+      width = 21.5 / 2.54, height = 30.5 / 2.54, paper = "a4")
+  
+  for (content in unique(data_maldi$peaks[[group]]$content)) {
+    
+      maldi_draw_peaks_by_well(data_maldi$spectra[[group]], 
+                               data_maldi$peaks[[group]][which(
+                                 data_maldi$peaks[[group]]$content == content), ],
+                               highlight_missing_peaks = FALSE, title = content, 
+                               ncol = 2, nrow = 6)
+    
+  }
+  
+  dev.off()
+  
+}
+```
+
+## Fitting IC50 values
+
+```{r}
+data_ic50 <- list()
+
+for (group in seq_along(data_maldi$peaks)) {
+  
+  log_task("fitting IC50 for", sQuote(names(data_maldi$peaks)[[group]]))
+  
+  data_ic50[[group]] <- data_maldi$peaks[[group]] %>%
+    # ensure variables are numeric
+    mutate(concentration = as.numeric(concentration)) %>% 
+    # filter out missing values for proper augmenting
+    filter(!is.na(percent), !is.na(concentration)) %>%
+    # 
+    group_by(content, ion) %>% 
+    fit_IC50(percent ~ concentration)
+  
+}
+```
+
 
 
 
