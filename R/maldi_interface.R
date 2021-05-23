@@ -14,7 +14,7 @@
 #' (If )
 #' @param review Do you want to review again all automatically assigned peaks?
 #' (Requires RStudio.)
-#' @param layout_file,confirm_layout_file,FUN_import_layout Path to a file that
+#' @param layout_file,confirm_layout_file,FUN_import_layout,MoreArgs_layout Path to a file that
 #' contains metadata associated with each well/group. \code{layout_FUN} is applied
 #' to \code{layout_file} before it is joined with the measurement result. Must
 #' share column names with \link{import_layout_from_paths.maldi}. See Details.
@@ -22,6 +22,10 @@
 #' the mass spectra using \code{MoreArgs_spect}.
 #' @param FUN_peaks,MoreArgs_peaks The function to be applied for peak detection
 #' using \code{MoreArgs_peak}.
+#' @param FUN_draw,MoreArgs_draw Arguments passed to \code{\link{maldi_draw_peaks_by_well}}.
+#' @param MoreArgs_device Arguments passed to \code{\link[grDevices:pdf]{pdf()}}.
+#' @param stored_peaks.generic Default name for peak backup file.
+#' @param stored_spect.generic Default name for spectra backup file.
 #' @inheritParams backup_file
 #'
 #' @details
@@ -86,7 +90,8 @@
 #' \link{import_layout_from_excel}, which will convert the plate into a (long)
 #' table with a column "well" and "content".
 #'
-#' If you provide such a (long) table directly, provide \code{\link{readxl::read_excel}}
+#' If you provide such a (long) table directly, provide
+#' \code{\link[readxl:read_excel]{readxl::read_excel}}
 #' or another appropriate function as argument \code{layout_import_FUN}.
 #'
 #' }
@@ -95,6 +100,7 @@
 #' themselves contain one element (of spectra lists or data.frames) for each group.
 #'
 #' @examples
+#' \dontrun{
 #' maldi_batch(
 #'   MoreArgs_spect = list(pivot = "[0-9]_[A-Z]+[0-9]+",
 #'                         final_trim_range = c(2420, 2445)),
@@ -106,6 +112,7 @@
 #'   MoreArgs_layout = list(meta_row  = c(concentration = "1"),
 #'                          meta_col  = character())
 #'   )
+#' }
 #'
 #' @importFrom magrittr %>%
 #' @importFrom rlang .data
@@ -216,8 +223,8 @@ maldi_batch <- function(path = NULL,
 
       if (confirm_layout_file) {
 
-        use_layout_file <- askYesNo(paste("Do you want to apply", sQuote(layout_file),
-                                          "as layout to all groups in the directory?"))
+        use_layout_file <- utils::askYesNo(paste("Do you want to apply", sQuote(layout_file),
+                                                 "as layout to all groups in the directory?"))
 
         if (use_layout_file) global_layout <- normalizePath(layout_file)
 
@@ -378,7 +385,7 @@ maldi_batch <- function(path = NULL,
       eval(rlang::call2(FUN_draw, object = dat_s, data_peaks = dat_p,
                         !!!MoreArgs_draw))
 
-      dev.off()
+      grDevices::dev.off()
 
       # PEAK DETECTION 2: detect peaks manually
 
@@ -454,8 +461,8 @@ maldi_batch <- function(path = NULL,
 
           if (confirm_layout_file) {
 
-            use_layout_file <- askYesNo(paste("Do you want to apply", sQuote(layout_file),
-                                              "as layout to all groups in the directory?"))
+            use_layout_file <- utils::askYesNo(paste("Do you want to apply", sQuote(layout_file),
+                                                     "as layout to all groups in the directory?"))
 
             if (use_layout_file) curr_layout <- normalizePath(layout_file)
 

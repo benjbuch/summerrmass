@@ -33,7 +33,7 @@ may contain the plate layout(s).}
 name of a single folder in each tree up to which "groups" and from which
 "replicates" are established. See Details.}
 
-\item{layout_file, confirm_layout_file, FUN_import_layout}{Path to a file that
+\item{layout_file, confirm_layout_file, FUN_import_layout, MoreArgs_layout}{Path to a file that
 contains metadata associated with each well/group. \code{layout_FUN} is applied
 to \code{layout_file} before it is joined with the measurement result. Must
 share column names with \link{import_layout_from_paths.maldi}. See Details.}
@@ -49,6 +49,14 @@ the mass spectra using \code{MoreArgs_spect}.}
 
 \item{FUN_peaks, MoreArgs_peaks}{The function to be applied for peak detection
 using \code{MoreArgs_peak}.}
+
+\item{FUN_draw, MoreArgs_draw}{Arguments passed to \code{\link{maldi_draw_peaks_by_well}}.}
+
+\item{MoreArgs_device}{Arguments passed to \code{\link[grDevices:pdf]{pdf()}}.}
+
+\item{stored_peaks.generic}{Default name for peak backup file.}
+
+\item{stored_spect.generic}{Default name for spectra backup file.}
 
 \item{stamp}{A datestamp (default) and/or timestamp constructed according
 to this specification (\link[base:strptime]{POSIXct}) is added to pre-existing
@@ -126,12 +134,14 @@ If you choose a graphical approach to define the plate layout, consider using
 \link{import_layout_from_excel}, which will convert the plate into a (long)
 table with a column "well" and "content".
 
-If you provide such a (long) table directly, provide \code{\link{readxl::read_excel}}
+If you provide such a (long) table directly, provide
+\code{\link[readxl:read_excel]{readxl::read_excel}}
 or another appropriate function as argument \code{layout_import_FUN}.
 
 }
 }
 \examples{
+\dontrun{
 maldi_batch(
   MoreArgs_spect = list(pivot = "[0-9]_[A-Z]+[0-9]+",
                         final_trim_range = c(2420, 2445)),
@@ -143,5 +153,6 @@ maldi_batch(
   MoreArgs_layout = list(meta_row  = c(concentration = "1"),
                          meta_col  = character())
   )
+}
 
 }

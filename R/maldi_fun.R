@@ -108,11 +108,11 @@ maldi_import_spectra <- function(path = getwd(), ...) {
 
     if (!answer) {
 
-      log_process("processing", length(fids), "Bruker FID files")
+      log_process("processing", length(files_fid), "Bruker FID files")
 
-      for (i in fids) shell(shQuote(paste("compassxport -a",
-                                          shQuote(normalizePath(i), type = "cmd"),
-                                          "-raw 1"), type = "cmd2"))
+      for (i in files_fid) shell(shQuote(paste("compassxport -a",
+                                               shQuote(normalizePath(i), type = "cmd"),
+                                               "-raw 1"), type = "cmd2"))
 
       log_done()
 
@@ -541,6 +541,9 @@ maldi_find_peaks_by_well <- function(object,
 #' must be a subset of \code{object}.
 #' @param ncol Number of plot columns to arrange per page.
 #' @param nrow Number of plot rows to arrange per page.
+#' @param title Optional title of plot.
+#' @param highlight_missing_peaks Whether or not spectra in which not all peaks
+#' are detected should be highlighted.
 #'
 #' @details
 #' No checking is done whether \code{data_peaks} was indeed derived from \code{object}.
@@ -578,8 +581,8 @@ maldi_draw_peaks_by_well <- function(object, data_peaks,
     dplyr::summarize(needs_check = dplyr::n_distinct(.data$ion), .data$findex,
                      .groups = "keep")
 
-  op <- par(no.readonly = TRUE)
-  on.exit(par(op))  # reconstitute par settings
+  op <- graphics::par(no.readonly = TRUE)
+  on.exit(graphics::par(op))  # reconstitute par settings
 
   graphics::par(mfcol = c(nrow + 1, ncol), mar = c(0, 2, 0, 1), oma = c(2, 2, 4, 2))
 

@@ -29,6 +29,7 @@
 #' Make first letter of a string uppercase
 #'
 #' @param x an string
+#'
 #' @noRd
 str_first_up <- function(x) {
 
@@ -42,11 +43,12 @@ str_first_up <- function(x) {
 
 #' Logging a separation line
 #'
+#' This logger can be conveniently activated/deactivatated by setting \code{options(summerr.log = ...)}.
+#'
 #' @param char the character to repeat
 #' @param line the length of the line
 #'
 #' @export
-#' @noRd
 log_line <- function(char = "=", line = getOption("width")) {
 
   if (getOption("summerr.log", default = TRUE)) {
@@ -59,10 +61,11 @@ log_line <- function(char = "=", line = getOption("width")) {
 
 #' Logging of tasks
 #'
+#' This logger can be conveniently activated/deactivatated by setting \code{options(summerr.log = ...)}.
+#'
 #' @param ... message
 #'
 #' @export
-#' @noRd
 log_task <- function(...) {
 
   if (getOption("summerr.log", default = TRUE)) {
@@ -77,13 +80,14 @@ log_task <- function(...) {
 
 #' Logging of processes
 #'
+#' This logger can be conveniently activated/deactivatated by setting \code{options(summerr.log = ...)}.
+#'
 #' @description
 #' Sub-routines performed under the headline of the current task.
 #'
 #' @param ... message
 #'
 #' @export
-#' @noRd
 log_process <- function(...) {
 
   if (getOption("summerr.log", default = TRUE)) {
@@ -98,10 +102,9 @@ log_process <- function(...) {
 
 #' Logging of process completion
 #'
-#' @param ... message
+#' This logger can be conveniently activated/deactivatated by setting \code{options(summerr.log = ...)}.
 #'
 #' @export
-#' @noRd
 log_done <- function() {
 
   log_process("done")
@@ -147,7 +150,7 @@ log_object <- function(object) {
 
 #' Issuing of warnings
 #'
-#' @param  ... message
+#' @param ... message
 #' @noRd
 log_warn <- function(...) {
 

@@ -19,9 +19,14 @@ maldi_draw_peaks_by_well(
 \item{data_peaks}{A peak data table as returned by \link{maldi_find_peaks_by_well};
 must be a subset of \code{object}.}
 
+\item{title}{Optional title of plot.}
+
 \item{ncol}{Number of plot columns to arrange per page.}
 
 \item{nrow}{Number of plot rows to arrange per page.}
+
+\item{highlight_missing_peaks}{Whether or not spectra in which not all peaks
+are detected should be highlighted.}
 }
 \description{
 Draws spectra and places them on a pdf page for printing.

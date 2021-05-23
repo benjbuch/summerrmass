@@ -654,7 +654,7 @@ import_layout_from_paths <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
     # Remove trailing path separator as we do not count "empty" directories; the
     # grp parts then look like "dir1/dir2/dir3" of which the leftmost may be
     # shared across all observations.
-    dplyr::mutate(V1 = cleanup_path(V1)) %>%
+    dplyr::mutate(V1 = cleanup_path(.data$V1)) %>%
     dplyr::mutate(
       grps_level = stringr::str_count(.data$V1, pattern = .Platform$file.sep),
       subs_level = stringr::str_count(.data$V2, pattern = .Platform$file.sep)
@@ -680,8 +680,8 @@ import_layout_from_paths <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
     # order corresponding to the original argument; if the paths argument was
     # a nested list, we only continue with the topmost entry
     dplyr::mutate(path_to_files = sapply(paths, "[[", 1)) %>%
-    dplyr::mutate(path_to_group = ifelse(nchar(group) > 0, stringr::str_extract(
-      first_paths, paste0("^.*?", group)),
+    dplyr::mutate(path_to_group = ifelse(nchar(.data$group) > 0, stringr::str_extract(
+      first_paths, paste0("^.*?", .data$group)),
       # as a result of clean_up_path, a leading file.sep was stripped off
       paste0(.Platform$file.sep, relative_to))) %>%
     # preserve the file order index
@@ -702,7 +702,7 @@ import_layout_from_paths <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
 
   datad <- datad %>%
     # remove empty groups
-    dplyr::mutate(across(starts_with(grp_prefix), ~ dplyr::na_if(., ""))) %>%
+    dplyr::mutate(dplyr::across(tidyselect::starts_with(grp_prefix), ~ dplyr::na_if(., ""))) %>%
     dplyr::select(!tidyselect::vars_select_helpers$where(~ all(is.na(.)))) %>%
     # preserve the group index
     dplyr::group_by(dplyr::across(tidyselect::starts_with(grp_prefix))) %>%
