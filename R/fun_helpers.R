@@ -799,6 +799,8 @@ display_plate_layout <- function(layout, ...) {
 #' A \link[dplyr:grouped_df]{grouped data frame} with additional columns, \code{data},
 #' \code{model}, \code{tidy}, \code{augment_old}, and \code{augment_new}.
 #'
+#' @importFrom rlang .data
+#'
 #' @export
 model_cleanly_groupwise <- function(x, FUN, newdata = NULL, ...) {
 
@@ -812,11 +814,11 @@ model_cleanly_groupwise <- function(x, FUN, newdata = NULL, ...) {
 
     dplyr::mutate(
       tidyr::nest(x),
-      model = purrr::map(data,  purrr::possibly(FUN, NULL), ...),
-      tidy  = purrr::map(model, purrr::possibly(broom::tidy, tibble())),
-      glance= purrr::map(model, purrr::possibly(broom::glance, tibble())),
-      augment_old = purrr::map2(model, data, purrr::possibly(broom::augment, tibble())),
-      augment_new = purrr::map2(model, data, purrr::possibly(broom::augment, tibble()),
+      model = purrr::map(.data$data,  purrr::possibly(FUN, NULL), ...),
+      tidy  = purrr::map(.data$model, purrr::possibly(broom::tidy, tibble::tibble())),
+      glance= purrr::map(.data$model, purrr::possibly(broom::glance, tibble::tibble())),
+      augment_old = purrr::map2(.data$model, .data$data, purrr::possibly(broom::augment, tibble::tibble())),
+      augment_new = purrr::map2(.data$model, .data$data, purrr::possibly(broom::augment, tibble::tibble()),
                                 newdata = newdata)
     )
 
