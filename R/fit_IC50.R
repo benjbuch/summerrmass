@@ -82,7 +82,7 @@ fit_IC50 <- function(x, formula, newdata = NULL, ...) {
 
       newdata <- newdata %>%
         dplyr::ungroup() %>%
-        dplyr::select(!dplyr::group_vars(x))
+        dplyr::select(!tidyselect::any_of(dplyr::group_vars(x)))
 
     }
 
