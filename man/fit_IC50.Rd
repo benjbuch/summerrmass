@@ -4,28 +4,27 @@
 \alias{fit_IC50}
 \title{Fitting IC50 curves}
 \usage{
-fit_IC50(x, formula, newdata = NULL, ...)
+fit_IC50(
+  x,
+  formula,
+  limits_lower = c(0, 5),
+  limits_upper = c(50, 100),
+  limits_hill = c(-Inf, +Inf),
+  limits_IC50 = c(0, 1000)
+)
 }
 \arguments{
 \item{x}{A data frame to be evaluated.}
 
 \item{formula}{A formula using variables of \code{x}.}
 
-\item{newdata}{Data used for extrapolating of the generated model.}
-
-\item{...}{Other arguments passed to \link{build_IC50}.}
-}
-\value{
-A named list containing the tidied and augmented data frames.
+\item{limits_lower, limits_upper, limits_hill, limits_IC50}{Upper and lower bounds
+for the paramters to be fitted.}
 }
 \description{
-Convenience wrapper calling \code{\link[broom:tidy]{broom::tidy}} and
-\code{\link[broom:augment]{broom::augment}} upon the model specified in
-\link{build_IC50}.
+Fits an IC50 curve using \code{\link[drc:drm]{drc::drm}}.
 }
 \details{
-The IC50 curves are fitted for each group if \code{x} is a
-\link[dplyr:grouped_df]{grouped data frame}.
-
-Error and warning messages are mostly suppressed.
+Fitted parameters are \code{"hill"}, \code{"lower"}, \code{"upper"}, and \code{"IC50"}.
+The defaults for upper and lower limits assume percentage
 }

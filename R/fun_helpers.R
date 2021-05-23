@@ -777,70 +777,48 @@ display_plate_layout <- function(layout, ...) {
 
 }
 
-#' Wrapper: Augment
+#' Fit, tidy and augment a model
 #'
-#' Passes a quoted expression to \code{\link[broom:augment]{broom::augment}}.
-#' Errors are caught and an empty \code{tibble} is returned.
+#' Fits a modelling call to each group of a grouped data frame, extracts the
+#' fitted parameters using \code{\link[broom:tidy]{broom::tidy}} and interpolates
+#' missing values using \code{\link[broom:tidy]{broom::augment}} on existing points
+#' or the \code{newdata}.
 #'
-#' @param expr A quoted model object or other R object with information.
-#' @inheritDotParams generics::augment
-#'
-#' @details
-#' Note that you must pre-built the formula before passing it as \code{expr}.
-#'
-#' @examples
-#' \dontrun{
-#' FUN <- my_builder()
-#' wrap_augment(FUN, ...)
-#' }
-#'
-#' @export
-wrap_augment <- function(expr, ...) {
-
-  tryCatch({
-
-    broom::augment(eval(expr), ...)
-
-  }, error = function(e) {
-
-    log_debugging(e)
-
-    tibble::tibble()
-
-  })
-
-}
-
-
-#' Wrapper: Tidy
-#'
-#' Passes a quoted expression to \code{\link[broom:augment]{broom::tidy}}.
-#' Errors are caught and an empty \code{tibble} is returned.
-#'
-#' @param expr A quoted model object or other R object with information.
-#' @inheritDotParams generics::tidy
+#' @param x Grouped data to apply \code{expr} upon. \code{x} is passed to \code{expr}
+#' as first argument.
+#' @param FUN A name of a function that returns a model object or another R object
+#' with model information.
+#' @param ... Arguments to \code{expr}.
+#' @param newdata Data points at which to evaluate the model.
 #'
 #' @details
-#' Note that you must pre-built the formula before passing it as \code{expr}.
+#' The fitting is wrapped with \code{\link[purrr:possibly]{purrr::possibly}} and
+#' will return empty objects instead of errors.
 #'
-#' @examples
-#' \dontrun{
-#' FUN <- my_builder()
-#' wrap_augment(FUN, ...)
-#' }
+#' @return
+#' A \link[dplyr:grouped_df]{grouped data frame} with additional columns, \code{data},
+#' \code{model}, \code{tidy}, \code{augment_old}, and \code{augment_new}.
 #'
 #' @export
-wrap_tidy <- function(expr, ...) {
+model_cleanly_groupwise <- function(x, FUN, newdata = NULL, ...) {
 
-  tryCatch({
+  # suppress error and warning messages
+  old_ep <- getOption("show.error.messages")
+  on.exit(options(show.error.messages = old_ep))
 
-    broom::tidy(eval(expr), ...)
+  options(show.error.messages = FALSE)
 
-  }, error = function(e) {
+  suppressWarnings({
 
-    log_debugging(e)
-
-    tibble::tibble()
+    dplyr::mutate(
+      tidyr::nest(x),
+      model = purrr::map(data,  purrr::possibly(FUN, NULL), ...),
+      tidy  = purrr::map(model, purrr::possibly(broom::tidy, tibble())),
+      glance= purrr::map(model, purrr::possibly(broom::glance, tibble())),
+      augment_old = purrr::map2(model, data, purrr::possibly(broom::augment, tibble())),
+      augment_new = purrr::map2(model, data, purrr::possibly(broom::augment, tibble()),
+                                newdata = newdata)
+    )
 
   })
 
