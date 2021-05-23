@@ -18,51 +18,54 @@ options(summerr.debug = FALSE)
 
 ## Introduction
 
-This vignette will outline a specfic use-case of the the `summerrmass` package.
+This vignette will outline a specfic use-case of the the `summerrmass` package:
 
-The package is loaded to the R session by calling:
+1. We [extract the peak intensity in MALDI spectra](#sec-extract) at three selected 
+ions (given by specific m/z ratios) from an array of MALDI measurements. 
+
+2. Since some of these intensities decline in the presence of an inhibitor, which 
+was added in various concentrations, we want to [calculate the IC50](#sec-fitting) 
+in this assay.
+
+The challenges are the following:
+
+1. The MALDI spectra reside within folders that only identify the "wells", i.e., 
+specific positions on the plate that was placed into the MALDI instrument for
+measuring. Thus, the paths to each spectrum are 
+"./some_measurement/*0_E7*/1/1Ref/Analysis.mzXML" or 
+".../*0_E8*/..." etc.
+We don't want to import all the spectra by hand, nor to rename the file paths.
+
+![A snapshot of the directory in which the collected data resides.](maldi_folderlayout.png){width=50%}
+
+2. We have a nice Excel sheet that specifies which compound and concentration
+was used in each well. We just need to merge this information somehow.
+
+![A sample plate layout in an Excel sheet. The top row indicates the concentration of compound that was added. (This vignette illustrates data for "Compound 10" only.)](maldi_platelayout.png){width=50%}
+
+Let's start:
 
 ```{r setup}
 library(summerrmass)
 ```
 
-Since the package is not part of CRAN, you must install (once) and update it from  
-its GitHub repository.
-
-```{r eval=FALSE}
-install.packages("githubinstall")  # if you have not installed "githubinstall"
-githubinstall::gh_install_packages("summerrmass")
-```
-
-### Aim of the Analysis
-
-We are going to extract the intensity of MALDI spectra at three selected m/z 
-ratios from an array of MALDI measurements that have been acquired in the
-presence of increasing inhibitor concentrations.
-
-We want to use the decline in intensity to fit the IC50.
-
-### Organization of the Raw Data
-
-
-
-## Extracting selected peak intensities from MALDI spectra
+## Extracting selected peak intensities from MALDI spectra {#sec-extract}
 
 Here, we will use the pre-built pipeline that ships with the package. If you want
 to learn how to built up a smaller analysis step-by-step, check out the examples
-in the documentation or the vignette on the package's basic functions.
+in the documentation (or the vignette on the package's basic functions).
 
-To adapt the pipeline to your needs, some arguments need probably to be adapted.
-This is outlined below in a bit more detail. However, `maldi_batch` is written
-in such a way that you can even exchange certain functions that are used for the
-individual steps and replace them with modified versions.[^1]
+To adapt the pipeline to your needs, some arguments need probably to change.
+`maldi_batch` is written in such a way that you can not only modify the 
+individual parameters, but even exchange most of the functions that are used for 
+in each step.[^1]
 
 [^1]: Provided that the modified functions return objects of similar type
 and structure to the original ones.
 
-So, here is how the full call to `maldi_batch` looks like. I have included also
-most presets for your information. The arguments which you are most likely to 
-adapt to your own needs are indicated with `(*)`.
+Here is how the full call to `maldi_batch` looks like. I have included 
+most of the defaults so that you get an idea of what can be changed. 
+`(*)` marks arguments which you are most likely to adapt to your own needs.
 
 ```{r batch_import, eval=FALSE}
 data_maldi <- maldi_batch(
@@ -200,8 +203,17 @@ head(data_maldi$peaks[[1]])
 ## Creating a resume file
 
 With the data at hand, we want to arrange the spectra per compound on a single 
-page in a PDF document. In a future version, this could be expanded to arrange
-the plots automatically by increasing/decreasing concentration in rows etc.
+page in a PDF document. Currently, this needs the user to specify how many spectra
+there are to arrange and assumes that there is a reasonable order along the wells.
+In a future release, the accessory function could be more self-reliant/flexible of 
+course.
+
+We go with two `for` loops here instead of the cherried `lapply` since it makes
+the code a bit easier to understand.[^3] 
+
+[^3]: Also, in case of something goes wrong in one of the groups, we have the data 
+processed for the other cases and can investigate the source of error interactively
+as the loop iterators `group` and `content` are available in the global environment.
 
 ```{r eval=FALSE, include=TRUE}
 for (group in seq_along(data_maldi$peaks)) {
@@ -212,22 +224,43 @@ for (group in seq_along(data_maldi$peaks)) {
   
   for (content in unique(data_maldi$peaks[[group]]$content)) {
     
-      maldi_draw_peaks_by_well(data_maldi$spectra[[group]], 
-                               data_maldi$peaks[[group]][which(
-                                 data_maldi$peaks[[group]]$content == content), ],
-                               highlight_missing_peaks = FALSE, title = content, 
-                               ncol = 2, nrow = 6)
+    # fill the page, i.e., we know that we want to place exactly 12 spectra
+    
+    maldi_draw_peaks_by_well(data_maldi$spectra[[group]], 
+                             data_maldi$peaks[[group]][which(
+                               data_maldi$peaks[[group]]$content == content), ],
+                             highlight_missing_peaks = FALSE, title = content, 
+                             ncol = 2, nrow = 6)
     
   }
   
-  dev.off()
+  dev.off()  ## close the file
   
 }
 ```
 
-## Fitting IC50 values
+## Fitting IC50 values {#sec-fitting}
+
+The `maldi_find_peaks_by_well` function that we have used for peak detection in
+`maldi_batch` measures not only the peak intensity as a column `.$intensity`, but
+also calculates the fraction a particular peak makes within all quantified peaks
+in a single (averaged) spectrum as `.$percent`. 
+
+Having added the metadata from the palte layout that specifies the inhibitor 
+concentration, which we find as `.$concentration`, we can fit a dose-response
+model (see `?fit_IC50`) using the formula `percent ~ concentration`. 
+We fit this model for each combination of `.$content` and `.$ion`.
+
+```{r echo=FALSE}
+head(data_maldi$peaks[[1]][, c("content", "ion", "mass", "intensity", "percent")])
+```
+
+(As we did for plotting, we take the same group-wise approach and use simply a `for` 
+loop.)
 
 ```{r}
+library(dplyr, quietly = TRUE)
+
 data_ic50 <- list()
 
 for (group in seq_along(data_maldi$peaks)) {
@@ -241,9 +274,19 @@ for (group in seq_along(data_maldi$peaks)) {
     filter(!is.na(percent), !is.na(concentration)) %>%
     # 
     group_by(content, ion) %>% 
-    fit_IC50(percent ~ concentration)
+    fit_IC50(percent ~ concentration, 
+             newdata = data.frame(concentration = 10^seq(-3, 3, length.out = 100)))
   
 }
+```
+
+Internally, a call is made to `broom::tidy` and `broom::augment` to extract all
+statistical parameters and the fitted curves.
+
+This is how the fit paramters retrieved by `broom::tidy` look like:
+
+```{r}
+head(data_ic50[[group]]$tidy)
 ```
 
 
