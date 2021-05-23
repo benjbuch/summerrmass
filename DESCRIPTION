@@ -26,14 +26,18 @@ Imports:
     tidyselect,
     tibble,
     ggplot2,
+    scales,
     forcats,
     magrittr,
+    broom,
+    readr,
     openxlsx,
     MALDIquant,
-    MALDIquantForeign
+    MALDIquantForeign,
+    drc
 Suggests: 
     rmarkdown,
     knitr
 VignetteBuilder: knitr
 Depends: 
-    R (>= 2.10)
+    R (>= 3.5.0)
