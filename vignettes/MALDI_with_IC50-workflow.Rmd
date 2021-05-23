@@ -188,6 +188,21 @@ specification, feel free to feed another function to `FUN_import_layout = ...`.
 Once `maldi_batch(...)` has finished, `data_maldi` contains two lists, one with
 the spectra and one with the peaks and associated layout.
 
+```{r eval=FALSE, include=FALSE}
+# purge personal information
+data_maldi$peaks[[1]]$path_to_files <- stringr::str_replace(data_maldi$peaks[[1]]$path_to_files, attr(data_maldi$spectra[[1]], "dir"), ".")
+data_maldi$peaks[[1]]$path_to_group <- stringr::str_replace(data_maldi$peaks[[1]]$path_to_group, attr(data_maldi$spectra[[1]], "dir"), ".")
+
+# import function from data-raw/BobCAT.R
+data_maldi$spectra[[1]] <- lapply(data_maldi$spectra[[1]], purge_personal_information, old_path = attr(data_maldi$spectra[[1]], "dir"))
+
+attr(data_maldi$spectra[[1]], "dir") <- "."
+attr(data_maldi$peaks[[1]], "dir") <- "."
+
+saveRDS(data_maldi, "data_maldi.rds")
+```
+
+
 ```{r include=FALSE}
 data_maldi <- readRDS("data_maldi.rds")
 ```
@@ -259,7 +274,8 @@ head(data_maldi$peaks[[1]][, c("content", "ion", "mass", "intensity", "percent")
 loop.)
 
 ```{r}
-library(tidyverse, quietly = TRUE)  ## specifically, "dplyr", "tidyr", "ggplot2"
+library(dplyr, quietly = TRUE)
+library(tidyr, quietly = TRUE)
 
 data_ic50 <- list()
 
@@ -297,6 +313,8 @@ data_ic50[[group]] %>%
 And we can do some plotting:
 
 ```{r fig.width=7, out.width="100%"}
+library(ggplot2)
+
 ggplot(data = data_ic50[[group]], aes(x = concentration, color = ion)) +
   # original data points
   geom_point(data = . %>% select(content, ion, data) %>% unnest(data), 
