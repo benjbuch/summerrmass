@@ -12,11 +12,11 @@
 #' The defaults for upper and lower limits assume percentage
 #'
 #' @return
-#' A quoted formula to be evaluated with \code{\link[base:eval]{eval}]}.
+#' A quoted formula to be evaluated with \code{\link[base:eval]{eval}}.
 #'
 build_IC50 <- function(x, formula,
                        limits_lower = c(0, 5), limits_upper = c(50, 100),
-                       limits_hill = c(-Inf, +Inf), limits_IC50 = c(0, 1e3), ...) {
+                       limits_hill = c(-Inf, +Inf), limits_IC50 = c(0, 1e3)) {
 
   ll <- c(limits_hill[[1]], limits_lower[[1]], limits_upper[[1]], limits_IC50[[1]])
   ul <- c(limits_hill[[2]], limits_lower[[2]], limits_upper[[2]], limits_IC50[[2]])

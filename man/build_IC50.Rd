@@ -10,8 +10,7 @@ build_IC50(
   limits_lower = c(0, 5),
   limits_upper = c(50, 100),
   limits_hill = c(-Inf, +Inf),
-  limits_IC50 = c(0, 1000),
-  ...
+  limits_IC50 = c(0, 1000)
 )
 }
 \arguments{
@@ -23,7 +22,7 @@ build_IC50(
 for the paramters to be fitted.}
 }
 \value{
-A quoted formula to be evaluated with \code{\link[base:eval]{eval}]}.
+A quoted formula to be evaluated with \code{\link[base:eval]{eval}}.
 }
 \description{
 Builds a formula using \code{\link[drc:drm]{drc::drm}} for IC50 curve fitting.
