@@ -259,7 +259,7 @@ head(data_maldi$peaks[[1]][, c("content", "ion", "mass", "intensity", "percent")
 loop.)
 
 ```{r}
-library(dplyr, quietly = TRUE)
+library(tidyverse, quietly = TRUE)  ## specifically, "dplyr", "tidyr", "ggplot2"
 
 data_ic50 <- list()
 
@@ -274,21 +274,54 @@ for (group in seq_along(data_maldi$peaks)) {
     filter(!is.na(percent), !is.na(concentration)) %>%
     # 
     group_by(content, ion) %>% 
-    fit_IC50(percent ~ concentration, 
-             newdata = data.frame(concentration = 10^seq(-3, 3, length.out = 100)))
+    model_cleanly_groupwise(fit_IC50, formula = percent ~ concentration, 
+                            newdata = data.frame(concentration = 10^seq(-3, 3, length.out = 100)))
+  
+  log_done()
   
 }
 ```
 
 Internally, a call is made to `broom::tidy` and `broom::augment` to extract all
-statistical parameters and the fitted curves.
+statistical parameters and calculate the fitted curves.
 
 This is how the fit paramters retrieved by `broom::tidy` look like:
 
 ```{r}
-head(data_ic50[[group]]$tidy)
+data_ic50[[group]] %>% 
+  select(content, ion, tidy) %>% 
+  unnest(tidy) %>% 
+  head()
 ```
 
+And we can do some plotting:
 
+```{r fig.width=7, out.width="100%"}
+ggplot(data = data_ic50[[group]], aes(x = concentration, color = ion)) +
+  # original data points
+  geom_point(data = . %>% select(content, ion, data) %>% unnest(data), 
+             aes(y = percent)) +
+  # fitted data points
+  geom_path(data = . %>% select(content, ion, augment_new) %>% unnest(augment_new),
+            aes(y = .fitted)) +
+  # add IC50 values
+  ggrepel::geom_text_repel(
+    data = . %>% select(content, ion, tidy) %>% unnest(tidy) %>% filter(term == "IC50"),
+    aes(y = 50, x = estimate, label = paste(
+      round(estimate, -floor(log10(std.error / 10))), "\U00B1", 
+      round(std.error, -floor(log10(std.error / 10)))))
+  ) +
+  #
+  labs(x = "concentration") +
+  guides(text = FALSE) +
+  #
+  scale_color_manual(values = c(mC = "#e31a1c", hmC = "#1f78b4", fC = "#33a02c")) +
+  scale_x_log10(limits = c(1, 1e3)) +
+  facet_wrap(vars(content)) +
+  theme_linedraw(base_size = 12) + theme(
+      panel.grid = element_blank()
+    )
+```
+Quite neat.
 
 
