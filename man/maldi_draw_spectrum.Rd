@@ -21,6 +21,8 @@ maldi_draw_spectrum(
 
 \item{x, y}{The coordinates of additional points to draw.}
 
+\item{overlay_color}{Color for overlay at 50\% transparency.}
+
 \item{SNR}{Level at which the signal-to-noise-ratio should be indicated.}
 
 \item{col}{Color for points and lines.}

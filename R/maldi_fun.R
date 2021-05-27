@@ -542,6 +542,7 @@ maldi_find_peaks_by_well <- function(object,
 #' @param x,y The coordinates of additional points to draw.
 #' @param SNR Level at which the signal-to-noise-ratio should be indicated.
 #' @param col Color for points and lines.
+#' @param overlay_color Color for overlay at 50\% transparency.
 #'
 #' @details
 #' If \code{object} is not a \code{\link[MALDIquant:MassSpectrum-class]{MassSpectrum}},
@@ -598,6 +599,7 @@ maldi_draw_spectrum <- function(object = NULL, xaxt = "s", x = NULL, y = NULL,
 #' @param title Optional title of plot.
 #' @param highlight_missing_peaks Whether or not spectra in which not all peaks
 #' are detected should be highlighted.
+#' @param SNR Optional signal-to-noise level used to detect peaks.
 #'
 #' @details
 #' No checking is done whether \code{data_peaks} was indeed derived from \code{object}.
@@ -630,7 +632,7 @@ maldi_draw_peaks_by_well <- function(object, data_peaks, ncol = 2, nrow = 6,
 
   dat_p <- data_peaks %>%
     dplyr::group_by(.data$findex, .data$well) %>%
-    dplyr::summarize(highlight = c(highlight_missing_peaks & any(is.na(mass))),
+    dplyr::summarize(highlight = c(highlight_missing_peaks & any(is.na(.data$mass))),
                      mass = list(.data$mass), intensity = list(.data$intensity),
                      n_replicates = max(.data$n_replicates), .groups = "keep") %>%
     dplyr::distinct()
@@ -641,7 +643,7 @@ maldi_draw_peaks_by_well <- function(object, data_peaks, ncol = 2, nrow = 6,
 
     if (is.na(i)) {
 
-      plot.new()
+      graphics::plot.new()
       next
 
     }

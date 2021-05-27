@@ -28,6 +28,8 @@ must be a subset of \code{object}.}
 are detected should be highlighted.}
 
 \item{title}{Optional title of plot.}
+
+\item{SNR}{Optional signal-to-noise level used to detect peaks.}
 }
 \description{
 Draws spectra and places them on a pdf page for printing.

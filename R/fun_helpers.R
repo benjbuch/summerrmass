@@ -783,7 +783,6 @@ display_plate_layout <- function(layout, ...) {
 #' on multiple pages. Unused positions on the grid are indexed with \code{NA}.
 #'
 #' @param items A list of items to arrange.
-#' @param nrow,ncol The dimension of the grid to arrange plots per page.
 #' @param byrow Whether to fill rows or columns first per page.
 #'
 #' @details
@@ -822,8 +821,8 @@ display_plate_layout <- function(layout, ...) {
 #' @export
 arrange_on_page <- function(items = NULL, byrow = TRUE) {
 
-  nrow <- par("mfcol")[1]
-  ncol <- par("mfcol")[2]
+  nrow <- graphics::par("mfcol")[1]
+  ncol <- graphics::par("mfcol")[2]
   ipp <- nrow * ncol  # items per page
 
   if (is.null(items)) items <- seq_len(ipp)
@@ -854,8 +853,8 @@ arrange_on_page <- function(items = NULL, byrow = TRUE) {
 #' @export
 get_border_indices <- function(items = NULL, border = "b", byrow = TRUE, include.widows = TRUE) {
 
-  nrow <- par("mfcol")[1]
-  ncol <- par("mfcol")[2]
+  nrow <- graphics::par("mfcol")[1]
+  ncol <- graphics::par("mfcol")[2]
   ipp <- nrow * ncol  # items per page
 
   if (is.null(items)) items <- seq_len(ipp)

@@ -10,8 +10,6 @@ arrange_on_page(items = NULL, byrow = TRUE)
 \item{items}{A list of items to arrange.}
 
 \item{byrow}{Whether to fill rows or columns first per page.}
-
-\item{nrow, ncol}{The dimension of the grid to arrange plots per page.}
 }
 \value{
 An integer vector of indices that can be used to sort \code{items} so that they
