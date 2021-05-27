@@ -1,5 +1,3 @@
-# USER INTERFACE ---------------------------------------------------------------
-
 #' Batch MALDI peak analysis of a directory
 #'
 #' This function is to control the flow of actions when batch processing a
@@ -409,6 +407,8 @@ maldi_batch <- function(path = NULL,
           dat_p.use <- dat_p %>%
             dplyr::filter(!(.data$findex %in% curr_check))
 
+          attr(dat_p.use, "SNR") <- attr(dat_p, "SNR")  # in case there is one
+
           dat_s.new <- dat_s[curr_check]
           attr(dat_s.new, "dir") <- curr_group_path
 
@@ -422,10 +422,10 @@ maldi_batch <- function(path = NULL,
 
           dat_p.new$findex <- curr_check[dat_p.new$findex]
 
-          log_debugging("new set of peaks generated")
-
           dat_p <- dplyr::bind_rows(dat_p.use, dat_p.new) %>%
             dplyr::arrange(.data$findex)
+
+          attr(dat_p, "SNR") <- attr(dat_p.use, "SNR")
 
         }
 
@@ -542,4 +542,14 @@ maldi_batch <- function(path = NULL,
 
 }
 
+#' Get a template for a MALDI script
+#'
+#' @param version A template version identifier.
+#'
+#' @export
+maldi_template <- function(version = "v0") {
 
+  get_template(package = "summerrmass", filename = "maldi_template",
+               version = version)
+
+}
