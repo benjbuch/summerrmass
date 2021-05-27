@@ -620,7 +620,8 @@ maldi_draw_spectrum <- function(object = NULL, xaxt = "s", x = NULL, y = NULL,
 #'
 #' @export
 maldi_draw_peaks_by_well <- function(object, data_peaks, ncol = 2, nrow = 6,
-                                     highlight_missing_peaks = TRUE, title = NULL) {
+                                     highlight_missing_peaks = TRUE, title = NULL,
+                                     SNR = NULL) {
 
   log_debugging("entered graphics device to plot peaks", object = data_peaks)
 
@@ -629,7 +630,7 @@ maldi_draw_peaks_by_well <- function(object, data_peaks, ncol = 2, nrow = 6,
 
   dat_p <- data_peaks %>%
     dplyr::group_by(.data$findex, .data$well) %>%
-    dplyr::summarize(highlight = c(highligh_missing_peaks & any(is.na(mass))),
+    dplyr::summarize(highlight = c(highlight_missing_peaks & any(is.na(mass))),
                      mass = list(.data$mass), intensity = list(.data$intensity),
                      n_replicates = max(.data$n_replicates), .groups = "keep") %>%
     dplyr::distinct()
@@ -651,7 +652,7 @@ maldi_draw_peaks_by_well <- function(object, data_peaks, ncol = 2, nrow = 6,
                         overlay_color = c(NA, "lightgray")[dat_p$highlight[[i]] + 1],
                         xaxt = c("n", "s")[(i %in% get_border_indices(
                           dat_p$findex, border = "b", byrow = TRUE) + 1)],
-                        SNR = attr(dat_p, "SNR"))
+                        SNR = SNR)
 
     graphics::title(paste0(dat_p$well[[i]], c("", "*")[(dat_p$n_replicates[[i]] > 1) + 1]),
                     line = -1.5)
@@ -664,67 +665,3 @@ maldi_draw_peaks_by_well <- function(object, data_peaks, ncol = 2, nrow = 6,
   log_debugging("exited graphics device to plot peaks")
 
 }
-
-
-# data_maldi$peaks[[1]] -> test1
-#
-# test1 %>% group_by(findex) %>%
-#   summarize(well, highlight = any(is.na(mass)), mass = list(mass), intensity = list(intensity),
-#             n_replicates = max(n_replicates), content = unique(content),
-#             concentration = unique(concentration)) -> test2
-#
-# test2 %>%
-#   mutate(concentration = as.numeric(concentration)) %>%
-#   arrange(desc(concentration))
-#
-# test3 <- data_maldi$spectra[[1]]
-#
-# attr(test2, "SNR") <- 3
-# # layout.show(n = 12)
-#
-# test2 <- test2 %>%
-#   mutate(concentration = as.numeric(concentration)) %>%
-#   arrange(desc(concentration)) %>% unique()
-#
-# mapply(maldi_draw_spectrum, object = test3[test2$findex],
-#        x = test2$mass, y = test2$intensity,
-#        overlay_color = c(NA, "lightgray")[test2$highlight + 1])
-#
-# # should take for loop to make explicit reference to findex, do not rely on vectorizing
-#
-# graphics::par(mfcol = c(8, 2), mar = c(0, 3, 0, 1), oma = c(3, 2, 3, 2))
-#
-# for (i in arrange_on_page(test2$findex, byrow = TRUE)) {
-#
-#   if (is.na(i)) {
-#
-#     plot.new()
-#     next
-#
-#   }
-#
-#   fi <- test2$findex[[i]]
-#
-#   maldi_draw_spectrum(test3[[fi]], x = test2$mass[[i]], y = test2$intensity[[i]],
-#                       overlay_color = c(NA, "lightgray")[test2$highlight[[i]] + 1],
-#                       xaxt = c("n", "s")[(i %in% get_border_indices(
-#                         test2$findex, border = "b", byrow = TRUE) + 1)],
-#                       SNR = attr(test2, "SNR"))
-#
-#   graphics::title(paste0(test2$well[[i]], c("", "*")[(i %in% which(
-#     is.na(test2$replicate))) + 1]), line = -1.5)
-#
-#   if (!is.null(title) && i == 1) graphics::mtext(title, line = 1, side = 3,
-#                                                  outer = TRUE, adj = 0)
-#
-# }
-
-
-#
-# mapply(maldi_draw_spectrum, test3[test2$findex[plot_order]],
-#        x = test2$mass[plot_order], y = test2$intensity[plot_order],
-#        overlay_color = c(NA, "lightgray")[test2$highlight[plot_order] + 1],
-#        xaxt = c("n", "s")[(plot_order %in% get_border_indices(test2$findex, border = "b", byrow = TRUE)) + 1])
-#
-
-
