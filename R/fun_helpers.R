@@ -777,6 +777,136 @@ display_plate_layout <- function(layout, ...) {
 
 }
 
+#' Arrange plots on a page
+#'
+#' This helper can be used to arrange plots with \code{\link[graphics:layout]{layout}}
+#' on multiple pages. Unused positions on the grid are indexed with \code{NA}.
+#'
+#' @param items A list of items to arrange.
+#' @param nrow,ncol The dimension of the grid to arrange plots per page.
+#' @param byrow Whether to fill rows or columns first per page.
+#'
+#' @details
+#' As a side-effect of calling this function, the \code{\link[graphics:layout]{layout}}
+#' of the current device is set to a matrix of \code{nrow} x \code{ncol}.
+#'
+#' @return
+#' An integer vector of indices that can be used to sort \code{items} so that they
+#' are neatly placed on a single page or multiple pages with \code{nrow} x \code{ncol}
+#' places. The index is filled with \code{NA} on the last page.
+#'
+#' @examples
+#' op <- graphics::par(no.readonly = TRUE)  # reconstitute par(...) afterwards
+#' par(mfcol = c(4, 2), mar = rep(0, 4))
+#' graphics::layout.show(9)  # one single plot on page 2
+#'
+#' plot_me <- function(n) {
+#'
+#'   for (i in n) {
+#'     plot.new()
+#'     text(0.5, 0.5, i)
+#'   }
+#'
+#' }
+#'
+#' plot_me(seq(1, 3))  # appended on same page
+#'
+#' par(mfcol = c(4, 2), mar = rep(0, 4))  # starts new page, but not always "accessible"
+#'
+#' plot_me(arrange_on_page(seq(1, 9), byrow = FALSE))
+#' plot_me(LETTERS[arrange_on_page(seq(1, 2), byrow = TRUE)])
+#'
+#' rm(plot_me)
+#' par(op)
+#'
+#' @export
+arrange_on_page <- function(items = NULL, byrow = TRUE) {
+
+  nrow <- par("mfcol")[1]
+  ncol <- par("mfcol")[2]
+  ipp <- nrow * ncol  # items per page
+
+  if (is.null(items)) items <- seq_len(ipp)
+
+  nop <- length(items) %/% ipp + (length(items) %% ipp > 0)  # number of pages
+
+  # call for side-effects on graphics device
+
+  graphics::layout(matrix(seq_len(ipp), nrow = nrow, ncol = ncol, byrow = byrow))
+
+  # order of elements over pages
+
+  c(seq_along(items), rep(NA, ipp - length(items) %% ipp))
+
+}
+
+#' Get the indices of plots that are on page borders
+#'
+#' Returns indices where \code{items} is next (in the direction of \code{border})
+#' to a cell containing \code{NA}; all outer borders are also \code{NA}.
+#'
+#' @inheritParams arrange_on_page
+#' @param border Top (\code{"t"}), bottom (\code{"b"}), left (\code{"l"}), right
+#' (\code{"r"}).
+#' @param include.widows \code{TRUE} if the last items on a semi-full page should
+#' also be returned.
+#'
+#' @export
+get_border_indices <- function(items = NULL, border = "b", byrow = TRUE, include.widows = TRUE) {
+
+  nrow <- par("mfcol")[1]
+  ncol <- par("mfcol")[2]
+  ipp <- nrow * ncol  # items per page
+
+  if (is.null(items)) items <- seq_len(ipp)
+
+  nop <- length(items) %/% ipp + (length(items) %% ipp > 0)  # number of pages
+
+  # ensure we have unique indices to process
+
+  index <- seq_along(items)
+  index[which(is.na(items))] <- NA  # propagate NA
+
+  if (byrow) {
+
+    all.pages <- matrix(c(index, rep(NA, ipp - length(items) %% ipp)),
+                        nrow = nrow * nop, ncol = ncol, byrow = TRUE)
+
+    all.pages <- lapply(seq(1, nop), function(p) all.pages[which(rep(
+      seq(1, nop), each = nrow) == p), ])
+
+  } else {
+
+    all.pages <- cbind(t(matrix(c(index, rep(NA, nrow - length(items) %% nrow)),
+                                nrow = length(items) %/% nrow + length(items) %% ncol,
+                                ncol = nrow, byrow = TRUE)),
+                       matrix(rep(NA, nop * ipp - nrow * (length(items) %/% nrow +
+                                                            length(items) %% ncol)),
+                              nrow = nrow))
+
+    all.pages <- lapply(seq(1, nop), function(p) all.pages[, which(rep(
+      seq(1, nop), each = ncol) == p)])
+
+  }
+
+  log_debugging("page layout", object = all.pages)
+
+  na.b <- function(M) M[which(is.na(apply(M, 2, function(x)
+    ifelse(is.na(x), 0, c(x[-1], NA)))))]
+  na.t <- function(M) M[which(is.na(apply(M, 2, function(x)
+    ifelse(is.na(x), 0, c(NA, x[-1])))))]
+  na.r <- function(M) M[which(is.na(t(apply(M, 1, function(x)
+    ifelse(is.na(x), 0, c(NA, x[-1]))))))]
+  na.l <- function(M) M[which(is.na(t(apply(M, 1, function(x)
+    ifelse(is.na(x), 0, c(x[-1], NA))))))]
+
+  all.pages <- lapply(all.pages, function(x) do.call(paste0("na.", border),
+                                                     args = list(M = x)))
+
+  unlist(all.pages)
+
+}
+
 #' Fit, tidy and augment a model
 #'
 #' Fits a modelling call to each group of a grouped data frame, extracts the
