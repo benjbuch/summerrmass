@@ -207,3 +207,36 @@ log_debugging <- function(..., object = NULL) {
   }
 
 }
+
+#' Script from template
+#'
+#' Opens a file with a template.
+#'
+#' @param package The name of the corresponding package this template is distributed with.
+#' @param filename A generic filename of the template, e.g., "fun_template".
+#' @param version  A version idtenfier, e.g., "A01".
+#'
+#' @noRd
+get_template <- function(package = NULL, filename = "template", version = "") {
+
+  tmp.name <- paste0(filename, "-", version, ".R")
+  tmp.file <- system.file("extdata", tmp.name, package = package)
+
+  tmp.cont <- readLines(tmp.file)
+
+  tmp.cont <- sub("<<TODAY>>", format(Sys.time(), "%y%m%d %X %Z"),
+                  tmp.cont, fixed = TRUE)
+  tmp.cont <- sub("<<RVERSION>>", R.version.string,
+                  tmp.cont, fixed = TRUE)
+
+  # add sessionInfo()
+
+  tmp.cont <- c(tmp.cont, paste("#", utils::capture.output(utils::sessionInfo())))
+
+  if (rstudioapi::isAvailable()) {
+
+    rstudioapi::documentNew(tmp.cont, type = "r")
+
+  }
+
+}
