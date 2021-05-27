@@ -137,7 +137,8 @@ log_message <- function(...) {
 #' Typically a table or else.
 #'
 #' @param object object
-#' @noRd
+#'
+#' @export
 log_object <- function(object) {
 
   if (getOption("summerr.log", default = TRUE)) {
