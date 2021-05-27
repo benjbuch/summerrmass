@@ -17,7 +17,7 @@ maldi_batch(
   MoreArgs_peaks = list(pivot = "[0-9]_[A-Z]+[0-9]+"),
   FUN_draw = maldi_draw_peaks_by_well,
   MoreArgs_draw = list(),
-  FUN_import_layout = import_layout_from_excel,
+  FUN_import_layout = summerr::import_layout_from_excel,
   MoreArgs_layout = list(),
   MoreArgs_device = list(width = 21.5/2.54, height = 30.5/2.54, paper = "a4"),
   stored_peaks.generic = "maldi_peaks.rds",
@@ -131,8 +131,8 @@ which extends the generic \link{import_layout_from_paths} by explicitly
 extracting a well number as column "well".
 
 If you choose a graphical approach to define the plate layout, consider using
-\link{import_layout_from_excel}, which will convert the plate into a (long)
-table with a column "well" and "content".
+\link[summerr:import_layout_from_excel]{import_layout_from_excel}, which will
+convert the plate into a (long) table with a column "well" and "content".
 
 If you provide such a (long) table directly, provide
 \code{\link[readxl:read_excel]{readxl::read_excel}}

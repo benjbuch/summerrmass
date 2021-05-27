@@ -46,6 +46,7 @@ was used in each well. We just need to merge this information somehow.
 Let's start:
 
 ```{r setup}
+library(summerr)
 library(summerrmass)
 ```
 

@@ -1,7 +1,7 @@
 Package: summerrmass
 Type: Package
 Title: Measure and Analyze MALDI Peaks
-Version: 0.1.0
+Version: 0.9.1
 Authors@R: 
     person(given = "Benjamin",
            family = "Buchmuller",
@@ -36,10 +36,12 @@ Imports:
     openxlsx,
     MALDIquant,
     MALDIquantForeign,
-    drc
+    drc,
+    summerr
 Suggests: 
     rmarkdown,
     knitr
+Remotes: benjbuch/summerr
 VignetteBuilder: knitr
 Depends: 
     R (>= 3.5.0)

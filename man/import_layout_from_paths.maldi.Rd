@@ -35,5 +35,5 @@ contain [A-Z]+[0-9]+".
 The resulting \link[dplyr:grouped_df]{grouped data frame} is grouped by \code{well}.
 }
 \seealso{
-\code{\link{import_layout_from_paths}}
+\code{\link[summerr:import_layout_from_paths]{import_layout_from_paths}}
 }

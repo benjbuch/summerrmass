@@ -1,3 +1,5 @@
+utils::globalVariables(".")
+
 #' summerrmass-package
 #'
 #' @author Benjamin Buchmuller \email{benjamin.buchmuller@@tu-dortmund.de}
@@ -15,36 +17,6 @@
 #' used to batch process (nested) direcotries containing data from measurments
 #' of plates. Each directory can be associated with a user-specified plate layout.
 #' The metadata can be used in further analysis steps.
-#'
-#' @section General Functions:
-#'
-#' (These may be moved to a general package.)
-#'
-#' \subsection{File and Directory Operations}{
-#'
-#' \link{select_directory}
-#'
-#' \link{select_single_file}
-#'
-#' \link{backup_file}
-#'
-#' } % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-#'
-#' \subsection{Importing Experiment Layouts}{
-#'
-#' \link{import_layout_from_excel}
-#'
-#' \link{import_layout_from_paths}
-#'
-#' \link{display_plate_layout}
-#'
-#' } % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-#'
-#' \subsection{Formatting Helpers}{
-#'
-#' \link{as_well}
-#'
-#' } % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 #'
 #' @section Routines for MALDI peak calling from Burker FlexAnalysis:
 #'

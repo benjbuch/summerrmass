@@ -24,7 +24,7 @@
 #' @param MoreArgs_device Arguments passed to \code{\link[grDevices:pdf]{pdf()}}.
 #' @param stored_peaks.generic Default name for peak backup file.
 #' @param stored_spect.generic Default name for spectra backup file.
-#' @inheritParams backup_file
+#' @inheritParams summerr::backup_file
 #'
 #' @details
 #' The batch process is split into different stages starting from the selected
@@ -85,8 +85,8 @@
 #' extracting a well number as column "well".
 #'
 #' If you choose a graphical approach to define the plate layout, consider using
-#' \link{import_layout_from_excel}, which will convert the plate into a (long)
-#' table with a column "well" and "content".
+#' \link[summerr:import_layout_from_excel]{import_layout_from_excel}, which will
+#' convert the plate into a (long) table with a column "well" and "content".
 #'
 #' If you provide such a (long) table directly, provide
 #' \code{\link[readxl:read_excel]{readxl::read_excel}}
@@ -128,7 +128,7 @@ maldi_batch <- function(path = NULL,
                         MoreArgs_peaks = list(pivot = "[0-9]_[A-Z]+[0-9]+"),
                         FUN_draw  = maldi_draw_peaks_by_well,
                         MoreArgs_draw  = list(),
-                        FUN_import_layout = import_layout_from_excel,
+                        FUN_import_layout = summerr::import_layout_from_excel,
                         MoreArgs_layout = list(),
                         MoreArgs_device = list(width = 21.5 / 2.54,
                                                height = 30.5 / 2.54,
@@ -143,7 +143,7 @@ maldi_batch <- function(path = NULL,
   old_wd <- getwd()
   on.exit(setwd(old_wd))
 
-  if (is.null(path)) path <- select_directory()
+  if (is.null(path)) path <- summerr::select_directory()
 
   # make sure to re-enter the current working directory if anything goes wrong
 
@@ -153,10 +153,10 @@ maldi_batch <- function(path = NULL,
 
   # check if arguments are properly set
 
-  if (isTRUE(MoreArgs_spect$pivot != pivot)) log_warn(
+  if (isTRUE(MoreArgs_spect$pivot != pivot)) summerr::log_warn(
     "the `pivot` in `MoreArgs_spect` is different from the global `pivot`")
 
-  if (isTRUE(MoreArgs_peaks$pivot != pivot)) log_warn(
+  if (isTRUE(MoreArgs_peaks$pivot != pivot)) summerr::log_warn(
     "the `pivot` in `MoreArgs_spect` is different from the global `pivot`")
 
   # establish groups
@@ -180,7 +180,7 @@ maldi_batch <- function(path = NULL,
 
   }
 
-  log_task("assessing directory", sQuote(path))
+  summerr::log_task("assessing directory", sQuote(path))
 
   # applying cbind and rbind is strictly necessary to suppress unwanted recycling
 
@@ -203,10 +203,10 @@ maldi_batch <- function(path = NULL,
                                        "processed_spectra_rds", "processed_peaks_rds"))) %>%
     dplyr::filter(!is.na(.data$path_to_group))
 
-  log_process("found", nrow(data_in_path), ifelse(nrow(data_in_path) > 1,
+  summerr::log_process("found", nrow(data_in_path), ifelse(nrow(data_in_path) > 1,
                                                   "groups", "group"))
 
-  log_object(data_in_path)
+  summerr::log_object(data_in_path)
 
   # look for plate layout file in main path
 
@@ -243,8 +243,8 @@ maldi_batch <- function(path = NULL,
 
   for (curr_group_idx in seq_along(data_in_path$path_to_group)) {
 
-    log_line("-")
-    log_task("advancing to sample group", data_in_path$path_to_group[[curr_group_idx]])
+    summerr::log_line("-")
+    summerr::log_task("advancing to sample group", data_in_path$path_to_group[[curr_group_idx]])
 
     # as stringr::str_remove was used to create the shorthand, we don't need to
     # call file.path(...) here
@@ -310,14 +310,14 @@ maldi_batch <- function(path = NULL,
 
       dat_s <- readRDS(file = pth_s); attr(dat_s, "dir") <- curr_group_path
 
-      log_process("imported", length(dat_s), "spectra from backup")
+      summerr::log_process("imported", length(dat_s), "spectra from backup")
 
     } else {
 
       # keep a backup of existing spectra or peak files
-      if (has_s) backup_file(file.path(curr_group_path, stored_spect.generic))
+      if (has_s) summerr::backup_file(file.path(curr_group_path, stored_spect.generic))
 
-      log_process("importing mass spectra")
+      summerr::log_process("importing mass spectra")
 
       err_s <- tryCatch({
 
@@ -335,7 +335,7 @@ maldi_batch <- function(path = NULL,
 
       }, error = function(e) {
 
-        log_message("Something went wrong in this group. Let's move on.")
+        summerr::log_message("Something went wrong in this group. Let's move on.")
 
         TRUE
 
@@ -343,12 +343,12 @@ maldi_batch <- function(path = NULL,
 
       if (err_s) {next}
 
-      log_process("saving")
+      summerr::log_process("saving")
 
       attr(dat_s, "dir") <- curr_group_path
       saveRDS(dat_s, file = pth_s)
 
-      log_done()
+      summerr::log_done()
 
     }
 
@@ -360,17 +360,17 @@ maldi_batch <- function(path = NULL,
 
       dat_p <- readRDS(file = pth_p); attr(dat_p, "dir") <- curr_group_path
 
-      log_process("imported", scales::comma(sum(lengths(dat_p))),
+      summerr::log_process("imported", scales::comma(sum(lengths(dat_p))),
                   "peak assignments from backup")
 
     } else {
 
       # keep a backup of existing spectra or peak files
-      if (has_p) backup_file(file.path(curr_group_path, stored_peaks.generic))
+      if (has_p) summerr::backup_file(file.path(curr_group_path, stored_peaks.generic))
 
       # PEAK DETECTION 1: detect peaks automatically
 
-      log_process("detecting peaks by well")
+      summerr::log_process("detecting peaks by well")
 
       dat_p <- eval(rlang::call2(FUN_peaks, object = dat_s, !!!MoreArgs_peaks))
 
@@ -429,24 +429,24 @@ maldi_batch <- function(path = NULL,
 
       file.remove(tmp_pdf)
 
-      log_process("saving")
+      summerr::log_process("saving")
 
       attr(dat_p, "dir") <- curr_group_path
       saveRDS(dat_p, file = pth_p)
 
-      log_done()
+      summerr::log_done()
 
     }
 
     ### dat_s and dat_p are now complete
 
-    log_task("combining with plate metadata")
+    summerr::log_task("combining with plate metadata")
 
     # look for plate layout file in main path
 
     if (!is.null(curr_layout)) {
 
-      log_process("looking for plate metadata")
+      summerr::log_process("looking for plate metadata")
 
       if (!is.null(layout_file)) {
 
@@ -479,11 +479,11 @@ maldi_batch <- function(path = NULL,
     # if none of the above worked out, prompt to select a file; cancelling the
     # dialogue will keep length(curr_layout) == 0.
 
-    if (is.null(curr_layout)) curr_layout <- select_single_file(path = curr_group_path)
+    if (is.null(curr_layout)) curr_layout <- summerr::select_single_file(path = curr_group_path)
 
     if (length(curr_layout) == 0) {
 
-      log_process("no plate layout selected")
+      summerr::log_process("no plate layout selected")
 
     } else {
 
@@ -496,10 +496,10 @@ maldi_batch <- function(path = NULL,
 
     }
 
-    log_process("exporting files")
+    summerr::log_process("exporting files")
 
-    backup_file(sub(x = pth_p, ".rds", "-long.csv"))
-    backup_file(sub(x = pth_p, ".rds", "-wide.csv"))
+    summerr::backup_file(sub(x = pth_p, ".rds", "-long.csv"))
+    summerr::backup_file(sub(x = pth_p, ".rds", "-wide.csv"))
 
     dat_p %>%
       tidyr::unnest(.data$path_to_files) %>%
@@ -532,7 +532,7 @@ maldi_batch <- function(path = NULL,
   names(all_s) <- data_in_path$path_to_group
   names(all_p) <- data_in_path$path_to_group
 
-  log_line("=")
+  summerr::log_line("=")
 
   list(spectra = all_s, peaks = all_p)
 
@@ -545,7 +545,7 @@ maldi_batch <- function(path = NULL,
 #' @export
 maldi_template <- function(version = "v0") {
 
-  get_template(package = "summerrmass", filename = "maldi_template",
-               version = version)
+  summerr::get_template(package = "summerrmass", filename = "maldi_template",
+                         version = version)
 
 }

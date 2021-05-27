@@ -8,7 +8,7 @@
 #' measurements of the same well are grouped in subfolders such as "0_A1/1",
 #' "0_A1/2" etc.
 #'
-#' @inheritParams import_layout_from_paths
+#' @inheritParams summerr::import_layout_from_paths
 #'
 #' @details
 #' \code{pivot} must contain a regular expression to identify the well, i.e.,
@@ -16,7 +16,7 @@
 #'
 #' The resulting \link[dplyr:grouped_df]{grouped data frame} is grouped by \code{well}.
 #'
-#' @seealso \code{\link{import_layout_from_paths}}
+#' @seealso \code{\link[summerr:import_layout_from_paths]{import_layout_from_paths}}
 #'
 #' @importFrom magrittr %>%
 #' @importFrom rlang .data
@@ -29,10 +29,10 @@ import_layout_from_paths.maldi <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
   stopifnot("Regular expression does not match [A-Z]+[0-9]+." = grepl(
     well_regex, x = pivot, fixed = TRUE))
 
-  datad <- import_layout_from_paths(paths = paths, pivot = pivot,
-                                    relative_to = relative_to)
+  datad <- summerr::import_layout_from_paths(paths = paths, pivot = pivot,
+                                             relative_to = relative_to)
 
-  datam <- dplyr::mutate(datad, as_well(stringr::str_extract(pivot, well_regex),
+  datam <- dplyr::mutate(datad, summerr::as_well(stringr::str_extract(pivot, well_regex),
                                         as.tibble = TRUE)) %>%
     dplyr::arrange(.data$well, .data$sub_1, .by_group = TRUE) %>%
     dplyr::group_by(.data$well)
@@ -79,7 +79,7 @@ maldi_import_spectra <- function(path = getwd(), ...) {
 
   # number of existing mzXML and fid files in path
 
-  log_task("scanning", sQuote(path), "for mass spectra")
+  summerr::log_task("scanning", sQuote(path), "for mass spectra")
 
   files_mzxml <- list.files(
     path = path, pattern = "\\.mzxml", ignore.case = TRUE,
@@ -89,9 +89,9 @@ maldi_import_spectra <- function(path = getwd(), ...) {
     path = path, pattern = "fid", ignore.case = TRUE,
     recursive = TRUE, full.names = TRUE)
 
-  log_process("found", length(files_fid), "Bruker FID files")
+  summerr::log_process("found", length(files_fid), "Bruker FID files")
 
-  log_process("found", length(files_mzxml), "mass spectrometry data (mzXML) files")
+  summerr::log_process("found", length(files_mzxml), "mass spectrometry data (mzXML) files")
 
   # processing of fid files (optional)
 
@@ -108,13 +108,13 @@ maldi_import_spectra <- function(path = getwd(), ...) {
 
     if (!answer) {
 
-      log_process("processing", length(files_fid), "Bruker FID files")
+      summerr::log_process("processing", length(files_fid), "Bruker FID files")
 
       for (i in files_fid) shell(shQuote(paste("compassxport -a",
                                                shQuote(normalizePath(i), type = "cmd"),
                                                "-raw 1"), type = "cmd2"))
 
-      log_done()
+      summerr::log_done()
 
     }
 
@@ -126,7 +126,7 @@ maldi_import_spectra <- function(path = getwd(), ...) {
     path = path, pattern = "\\.mzxml", ignore.case = TRUE,
     recursive = TRUE, full.names = TRUE)
 
-  log_process("importing", length(files_mzxml), "mass spectrometry data (mzXML) files")
+  summerr::log_process("importing", length(files_mzxml), "mass spectrometry data (mzXML) files")
 
   suppressMessages({
 
@@ -144,7 +144,7 @@ maldi_import_spectra <- function(path = getwd(), ...) {
     empties <- sapply(data_mzxml, function(x) MALDIquant::metaData(x)$file)[which(empties)]
     names(empties) <- rep("x", length(empties))
 
-    log_error(header = "empty spectra detected",
+    summerr::log_error(header = "empty spectra detected",
               body = c(i = "The following mass spectra are empty:", empties))
 
   }
@@ -154,7 +154,7 @@ maldi_import_spectra <- function(path = getwd(), ...) {
     centies <- sapply(data_mzxml, function(x) MALDIquant::metaData(x)$file)[which(centies)]
     names(centies) <- rep("x", length(centies))
 
-    log_error(header = "centroid spectra detected",
+    summerr::log_error(header = "centroid spectra detected",
               body = c(i = "The following mass spectra are centroid:", centies))
 
   }
@@ -269,7 +269,7 @@ maldi_tapply <- function(object, FUN,
 
   }
 
-  log_debugging("INDEX is", object = INDEX)
+  summerr::log_debugging("INDEX is", object = INDEX)
 
   eval(rlang::call2(tapply, X = object, INDEX = INDEX, FUN = FUN, !!!MoreArgs))
 
@@ -298,7 +298,7 @@ maldi_average_by_well <- function(object,
                                   final_trim_range = c(0, Inf),
                                   pivot = "[0-9]_[A-Z]+[0-9]+") {
 
-  log_process("averaging and aligning spectra")
+  summerr::log_process("averaging and aligning spectra")
 
   INDEX <- maldi_get_paths(object) %>%
     import_layout_from_paths.maldi(pivot = pivot,
@@ -314,7 +314,7 @@ maldi_average_by_well <- function(object,
                                              ...,
                                              final_trim_range = final_trim_range))
 
-  log_done()
+  summerr::log_done()
 
   attr(data_mzxml, "dir") <- attr(object, "dir")
 
@@ -439,7 +439,7 @@ maldi_find_peaks_by_well <- function(object,
     smoo_spectrum <- mass_spectrum <- object[[i]]
     reso_spectrum <- mean(diff(MALDIquant::mass(mass_spectrum)))
 
-    log_debugging("spectrum resolution is", reso_spectrum)
+    summerr::log_debugging("spectrum resolution is", reso_spectrum)
 
     tryCatch({
 
@@ -506,7 +506,7 @@ maldi_find_peaks_by_well <- function(object,
 
     }, error = function(e) {
 
-      log_message("failed peak detection for", sQuote(MALDIquant::metaData(object[[i]])$file))
+      summerr::log_message("failed peak detection for", sQuote(MALDIquant::metaData(object[[i]])$file))
 
     })
 
@@ -625,7 +625,7 @@ maldi_draw_peaks_by_well <- function(object, data_peaks, ncol = 2, nrow = 6,
                                      highlight_missing_peaks = TRUE, title = NULL,
                                      SNR = NULL) {
 
-  log_debugging("entered graphics device to plot peaks", object = data_peaks)
+  summerr::log_debugging("entered graphics device to plot peaks", object = data_peaks)
 
   op <- graphics::par(no.readonly = TRUE)
   on.exit(graphics::par(op))  # reconstitute par settings
@@ -639,7 +639,7 @@ maldi_draw_peaks_by_well <- function(object, data_peaks, ncol = 2, nrow = 6,
 
   graphics::par(mfcol = c(nrow, ncol), mar = c(0, 2, 0, 1), oma = c(2, 2, 4, 2))
 
-  for (i in arrange_on_page(dat_p$findex, byrow = TRUE)) {
+  for (i in summerr::arrange_on_page(dat_p$findex, byrow = TRUE)) {
 
     if (is.na(i)) {
 
@@ -652,7 +652,7 @@ maldi_draw_peaks_by_well <- function(object, data_peaks, ncol = 2, nrow = 6,
 
     maldi_draw_spectrum(object[[fi]], x = dat_p$mass[[i]], y = dat_p$intensity[[i]],
                         overlay_color = c(NA, "lightgray")[dat_p$highlight[[i]] + 1],
-                        xaxt = c("n", "s")[(i %in% get_border_indices(
+                        xaxt = c("n", "s")[(i %in% summerr::get_border_indices(
                           dat_p$findex, border = "b", byrow = TRUE) + 1)],
                         SNR = SNR)
 
@@ -664,6 +664,6 @@ maldi_draw_peaks_by_well <- function(object, data_peaks, ncol = 2, nrow = 6,
 
   }
 
-  log_debugging("exited graphics device to plot peaks")
+  summerr::log_debugging("exited graphics device to plot peaks")
 
 }
