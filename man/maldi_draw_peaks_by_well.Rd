@@ -10,7 +10,8 @@ maldi_draw_peaks_by_well(
   ncol = 2,
   nrow = 6,
   highlight_missing_peaks = TRUE,
-  title = NULL
+  title = NULL,
+  SNR = NULL
 )
 }
 \arguments{

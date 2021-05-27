@@ -102,7 +102,6 @@ data_maldi <- maldi_batch(
                            # metadata stored in columns
                          ))
 )
-
 ```
 
 The most important argument the pipeline is the **pivot**, which is a regular
