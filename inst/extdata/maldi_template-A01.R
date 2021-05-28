@@ -34,6 +34,7 @@ plot_each_compound <- TRUE  # this make take a while if TRUE
 
 #' =============================================================================
 
+library(summerr)
 library(summerrmass)
 library(tidyverse, quietly = TRUE)
 
