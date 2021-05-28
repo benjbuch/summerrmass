@@ -48,7 +48,7 @@ NULL
 #' @param version A template version identifier.
 #'
 #' @export
-maldi_template <- function(version = "v0") {
+maldi_template <- function(version = "A01") {
 
   summerr::get_template(package = "summerrmass", filename = "maldi_template",
                         version = version)
