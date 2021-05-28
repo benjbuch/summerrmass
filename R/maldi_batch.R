@@ -147,7 +147,7 @@ maldi_batch <- function(path = NULL,
 
   # make sure to re-enter the current working directory if anything goes wrong
 
-  path <- normalizePath(path)
+  path <- summerr::normalizePath(path)
 
   setwd(path)
 
@@ -181,9 +181,9 @@ maldi_batch <- function(path = NULL,
   }
 
   summerr::log_task("assessing directory", sQuote(path))
-
+  
   # applying cbind and rbind is strictly necessary to suppress unwanted recycling
-
+  
   data_in_path <- tibble::as_tibble(cbind(
     rbind(sapply(c(raw_xml_files = "\\.mzxml",
                    raw_fid_files = "fid"), list_rawdata,
@@ -195,7 +195,7 @@ maldi_batch <- function(path = NULL,
     tidyr::pivot_longer(dplyr::everything(), values_to = "path_to_group") %>%
     tidyr::unnest("path_to_group", keep_empty = TRUE) %>%
     # make sure to get trimmed dirnames
-    dplyr::mutate(path_to_group = stringr::str_remove(.data$path_to_group, path)) %>%
+    dplyr::mutate(path_to_group = stringr::str_remove(.data$path_to_group, stringr::fixed(path))) %>%
     dplyr::group_by(.data$name, .data$path_to_group) %>%
     dplyr::summarize(status = dplyr::n()) %>%
     tidyr::pivot_wider(names_from = "name", values_from = "status") %>%
@@ -207,6 +207,8 @@ maldi_batch <- function(path = NULL,
                                                   "groups", "group"))
 
   summerr::log_object(data_in_path)
+  
+  # browser()
 
   # look for plate layout file in main path
 
@@ -224,13 +226,13 @@ maldi_batch <- function(path = NULL,
         use_layout_file <- utils::askYesNo(paste("Do you want to apply", sQuote(layout_file),
                                                  "as layout to all groups in the directory?"))
 
-        if (use_layout_file) global_layout <- normalizePath(layout_file)
+        if (use_layout_file) global_layout <- summerr::normalizePath(layout_file)
 
       } else {
 
         # just take it
 
-        global_layout <- normalizePath(layout_file)
+        global_layout <- summerr::normalizePath(layout_file)
 
       }
 
@@ -304,7 +306,7 @@ maldi_batch <- function(path = NULL,
 
     # processing spectra
 
-    pth_s <- normalizePath(file.path(curr_group_path, stored_spect.generic))
+    pth_s <- summerr::normalizePath(file.path(curr_group_path, stored_spect.generic))
 
     if (use_s) {
 
@@ -354,7 +356,7 @@ maldi_batch <- function(path = NULL,
 
     # processing peaks
 
-    pth_p <- normalizePath(file.path(curr_group_path, stored_peaks.generic))
+    pth_p <- summerr::normalizePath(file.path(curr_group_path, stored_peaks.generic))
 
     if (use_p) {
 
@@ -460,13 +462,13 @@ maldi_batch <- function(path = NULL,
             use_layout_file <- utils::askYesNo(paste("Do you want to apply", sQuote(layout_file),
                                                      "as layout to all groups in the directory?"))
 
-            if (use_layout_file) curr_layout <- normalizePath(layout_file)
+            if (use_layout_file) curr_layout <- summerr::normalizePath(layout_file)
 
           } else {
 
             # just take it
 
-            curr_layout <- normalizePath(layout_file)
+            curr_layout <- summerr::normalizePath(layout_file)
 
           }
 
@@ -487,7 +489,7 @@ maldi_batch <- function(path = NULL,
 
     } else {
 
-      dat_l <- eval(rlang::call2(FUN_import_layout, file = normalizePath(curr_layout),
+      dat_l <- eval(rlang::call2(FUN_import_layout, file = summerr::normalizePath(curr_layout),
                                  !!!MoreArgs_layout))
 
       dat_p <- dplyr::left_join(dat_p, dat_l)
@@ -537,3 +539,18 @@ maldi_batch <- function(path = NULL,
   list(spectra = all_s, peaks = all_p)
 
 }
+<<<<<<< HEAD
+=======
+
+#' Get a template for a MALDI script
+#'
+#' @param version A template version identifier.
+#'
+#' @export
+maldi_template <- function(version = "A01") {
+
+  summerr::get_template(package = "summerrmass", filename = "maldi_template",
+                         version = version)
+
+}
+>>>>>>> 208823fe4c9e24eddeb89d1441cb5e879df2c5f4

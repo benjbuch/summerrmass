@@ -32,7 +32,7 @@ Imports:
     forcats,
     magrittr,
     broom,
-    readr,
+    readr (>= 1.4.0),
     openxlsx,
     MALDIquant,
     MALDIquantForeign,
