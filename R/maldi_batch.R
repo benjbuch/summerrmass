@@ -537,15 +537,3 @@ maldi_batch <- function(path = NULL,
   list(spectra = all_s, peaks = all_p)
 
 }
-
-#' Get a template for a MALDI script
-#'
-#' @param version A template version identifier.
-#'
-#' @export
-maldi_template <- function(version = "v0") {
-
-  summerr::get_template(package = "summerrmass", filename = "maldi_template",
-                         version = version)
-
-}
