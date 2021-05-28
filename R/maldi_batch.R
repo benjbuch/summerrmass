@@ -181,9 +181,9 @@ maldi_batch <- function(path = NULL,
   }
 
   summerr::log_task("assessing directory", sQuote(path))
-
+  
   # applying cbind and rbind is strictly necessary to suppress unwanted recycling
-
+  
   data_in_path <- tibble::as_tibble(cbind(
     rbind(sapply(c(raw_xml_files = "\\.mzxml",
                    raw_fid_files = "fid"), list_rawdata,
@@ -207,6 +207,8 @@ maldi_batch <- function(path = NULL,
                                                   "groups", "group"))
 
   summerr::log_object(data_in_path)
+  
+  # browser()
 
   # look for plate layout file in main path
 

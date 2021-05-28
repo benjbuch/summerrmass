@@ -327,44 +327,48 @@ for (group in seq_along(data_maldi$peaks)) {
 
 }
 
-# plot: estimates as bargraph
-
-curr_plot <- data_ic50 %>%
-  dplyr::bind_rows(.id = "sample_group") %>%
-  dplyr::group_by(sample_group, .add = TRUE) %>%
-  dplyr::select(dplyr::group_vars(.), "tidy") %>%
-  tidyr::unnest(tidy) %>%
-  dplyr::filter(ion == "hmC + fC", term == "IC50",
-                estimate < 500, std.error < estimate,
-                !(content %in% c(positive_control, negative_control)),
-                ) %>%
-  ggplot2::ggplot(ggplot2::aes(x = forcats::fct_reorder(content, estimate, mean),
-                               y = 1 + estimate, fill = sample_group)) +
-  ggplot2::geom_bar(
-    stat = "identity",
-    position = ggplot2::position_dodge(preserve = "total"), width = 0.5) +
-  ggplot2::geom_linerange(#data = . %>% filter(std.error < 0.5 * estimate),
-    ggplot2::aes(ymin = 1 + estimate - std.error, ymax = 1 + estimate + std.error),
-    position = ggplot2::position_dodge(preserve = "total", width = 0.5)) +
-  # labels
-  ggplot2::labs(fill = NULL, y = paste("IC50 /", concentration_unit)) +
-  # scales
-  ggplot2::scale_y_continuous() +
-  ggplot2::coord_flip() +
-  # theme
-  ggplot2::theme_linedraw(base_size = 12) + ggplot2::theme(
-    axis.title.y = ggplot2::element_blank(),
-    panel.grid.major.y = ggplot2::element_blank(),
-    legend.position = "bottom"
-  )
-
-print(curr_plot)
-
-ggsave(plot = curr_plot, path = getwd(),
-       filename = paste0(format(Sys.time(), "%y%m%d"), "-fitted_IC50.pdf"),
-       width = 21.5, height = 30.5, units = "cm")
-
-rm(curr_plot)
+if (length(data_ic50) > 0) {
+  
+  # plot: estimates as bargraph
+  
+  curr_plot <- data_ic50 %>%
+    dplyr::bind_rows(.id = "sample_group") %>%
+    dplyr::group_by(sample_group, .add = TRUE) %>%
+    dplyr::select(dplyr::group_vars(.), "tidy") %>%
+    tidyr::unnest(tidy) %>%
+    dplyr::filter(ion == "hmC + fC", term == "IC50",
+                  estimate < 500, std.error < estimate,
+                  !(content %in% c(positive_control, negative_control)),
+    ) %>%
+    ggplot2::ggplot(ggplot2::aes(x = forcats::fct_reorder(content, estimate, mean),
+                                 y = 1 + estimate, fill = sample_group)) +
+    ggplot2::geom_bar(
+      stat = "identity",
+      position = ggplot2::position_dodge(preserve = "total"), width = 0.5) +
+    ggplot2::geom_linerange(#data = . %>% filter(std.error < 0.5 * estimate),
+      ggplot2::aes(ymin = 1 + estimate - std.error, ymax = 1 + estimate + std.error),
+      position = ggplot2::position_dodge(preserve = "total", width = 0.5)) +
+    # labels
+    ggplot2::labs(fill = NULL, y = paste("IC50 /", concentration_unit)) +
+    # scales
+    ggplot2::scale_y_continuous() +
+    ggplot2::coord_flip() +
+    # theme
+    ggplot2::theme_linedraw(base_size = 12) + ggplot2::theme(
+      axis.title.y = ggplot2::element_blank(),
+      panel.grid.major.y = ggplot2::element_blank(),
+      legend.position = "bottom"
+    )
+  
+  print(curr_plot)
+  
+  ggsave(plot = curr_plot, path = getwd(),
+         filename = paste0(format(Sys.time(), "%y%m%d"), "-fitted_IC50.pdf"),
+         width = 21.5, height = 30.5, units = "cm")
+  
+  rm(curr_plot)
+  
+}
 
 log_task("finished! Have a great day")
 
