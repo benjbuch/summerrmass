@@ -34,7 +34,6 @@ plot_each_compound <- TRUE  # this make take a while if TRUE
 
 #' =============================================================================
 
-library(summerr)
 library(summerrmass)
 library(tidyverse, quietly = TRUE)
 
@@ -329,9 +328,9 @@ for (group in seq_along(data_maldi$peaks)) {
 }
 
 if (length(data_ic50) > 0) {
-  
+
   # plot: estimates as bargraph
-  
+
   curr_plot <- data_ic50 %>%
     dplyr::bind_rows(.id = "sample_group") %>%
     dplyr::group_by(sample_group, .add = TRUE) %>%
@@ -360,15 +359,15 @@ if (length(data_ic50) > 0) {
       panel.grid.major.y = ggplot2::element_blank(),
       legend.position = "bottom"
     )
-  
+
   print(curr_plot)
-  
+
   ggsave(plot = curr_plot, path = getwd(),
          filename = paste0(format(Sys.time(), "%y%m%d"), "-fitted_IC50.pdf"),
          width = 21.5, height = 30.5, units = "cm")
-  
+
   rm(curr_plot)
-  
+
 }
 
 log_task("finished! Have a great day")

@@ -181,9 +181,9 @@ maldi_batch <- function(path = NULL,
   }
 
   summerr::log_task("assessing directory", sQuote(path))
-  
+
   # applying cbind and rbind is strictly necessary to suppress unwanted recycling
-  
+
   data_in_path <- tibble::as_tibble(cbind(
     rbind(sapply(c(raw_xml_files = "\\.mzxml",
                    raw_fid_files = "fid"), list_rawdata,
@@ -207,7 +207,7 @@ maldi_batch <- function(path = NULL,
                                                   "groups", "group"))
 
   summerr::log_object(data_in_path)
-  
+
   # browser()
 
   # look for plate layout file in main path
@@ -539,18 +539,3 @@ maldi_batch <- function(path = NULL,
   list(spectra = all_s, peaks = all_p)
 
 }
-<<<<<<< HEAD
-=======
-
-#' Get a template for a MALDI script
-#'
-#' @param version A template version identifier.
-#'
-#' @export
-maldi_template <- function(version = "A01") {
-
-  summerr::get_template(package = "summerrmass", filename = "maldi_template",
-                         version = version)
-
-}
->>>>>>> 208823fe4c9e24eddeb89d1441cb5e879df2c5f4
