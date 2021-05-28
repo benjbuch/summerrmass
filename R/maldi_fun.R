@@ -71,7 +71,7 @@ maldi_import_spectra <- function(path = getwd(), ...) {
   old_wd <- getwd()
   on.exit(setwd(old_wd))
 
-  path <- normalizePath(path)
+  path <- summerr::normalizePath(path)
 
   # this is important to call the terminal exection
 
@@ -111,7 +111,7 @@ maldi_import_spectra <- function(path = getwd(), ...) {
       summerr::log_process("processing", length(files_fid), "Bruker FID files")
 
       for (i in files_fid) shell(shQuote(paste("compassxport -a",
-                                               shQuote(normalizePath(i), type = "cmd"),
+                                               shQuote(summerr::normalizePath(i), type = "cmd"),
                                                "-raw 1"), type = "cmd2"))
 
       summerr::log_done()
