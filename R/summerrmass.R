@@ -43,14 +43,14 @@ utils::globalVariables(".")
 #' @name summerrmass-package
 NULL
 
-#' Get a template for a MALDI script
+#' Use a template for a MALDI script
 #'
 #' @param version A template version identifier.
 #'
 #' @export
-maldi_template <- function(version = "A01") {
+use_template <- function(version = "A01") {
 
-  summerr::get_template(package = "summerrmass", filename = "maldi_template",
+  summerr::get_template(package = "summerrmass", filename = "template",
                         version = version)
 
 }
