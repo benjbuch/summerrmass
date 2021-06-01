@@ -4,13 +4,14 @@
 #'          on: <<TODAY>>
 #'
 #' template by: Benjamin Buchmuller
-#'          on: 210523
+#'          on: 210601
 #'
 #' <<RVERSION>>
 #'
 #' -----------------------------------------------------------------------------
 #' BASIC USAGE
-#' Change the parameters below to reflect your needs, save and "source" this document.
+#' Change the parameters below to reflect your needs. Then save and "source" the
+#' document.
 #' -----------------------------------------------------------------------------
 
 trim_spectra_lower_bound = 2420
@@ -25,7 +26,7 @@ positive_control <- "DFOA"  # put the same as "negative_control" to omit empty f
 normalize_before_fitting <- TRUE
 default_levels_negative <- c(mC = 0, hmC = 100, fC = 100, `hmC + fC` = 100)  # should be percentages
 
-concentration_unit <- "µM"
+concentration_unit <- "\U00B5M"  # micro sign unicode character: \U00B5
 
 # parameters for plotting
 plot_ncol <- 2
@@ -224,16 +225,16 @@ for (group in seq_along(data_maldi$peaks)) {
     curr_plot <- curr_ic50 %>%
       dplyr::filter(ion == "hmC + fC") %>%
       dplyr::filter(lengths(model) != 0)
-    
+
     if (nrow(curr_plot) == 0) {
-      
+
       log_process("there is nothing to plot")
-      
+
     } else {
-      
+
       log_process("rendering plots")
-      
-      curr_plot <- curr_plot %>% 
+
+      curr_plot <- curr_plot %>%
         # make sure that empty facets are not dropped, but left empty
         dplyr::mutate(content = factor(
           content, unique(c(content, positive_control, negative_control))),
@@ -276,13 +277,13 @@ for (group in seq_along(data_maldi$peaks)) {
         ggplot2::theme_linedraw(base_size = 12) + ggplot2::theme(
           panel.grid = ggplot2::element_blank()
         )
-      
+
       tryCatch({
-        
+
         print(curr_plot)
-        
+
       }, error = function(e) {
-        
+
         # typically fails with
         #
         # grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y,  :
@@ -290,49 +291,49 @@ for (group in seq_along(data_maldi$peaks)) {
         #
         # source unclear; however, repeating seems to solve the issue, else
         # epic fail
-        
+
         graphics.off()
-        
+
         print(curr_plot)
-        
+
       })
 
       # plot: all fits
-      
+
       pdf(file = file.path(attr(curr_s, "dir"),
                            paste0(format(Sys.time(), "%y%m%d"), "-fitted_IC50_estimates.pdf")),
           height = 21.5 / 2.54, width = 30.5 / 2.54, paper = "a4")
-      
+
       print(curr_plot)
-      
+
       dev.off()
-      
+
       # plot: fits by compound
-      
+
       curr_plot_fun <- function(p) {
-        
+
         curr_plot + ggforce::facet_wrap_paginate(ggplot2::vars(content), drop = FALSE,
                                                  nrow = 1, ncol = 1, page = p)
-        
+
       }
-      
+
       if (plot_each_compound == TRUE) for (p in seq_len(ggforce::n_pages(curr_plot_fun(0)))) {
-        
+
         ggplot2::ggsave(path = file.path(attr(curr_s, "dir")),
                         filename = paste0(format(Sys.time(), "%y%m%d"), "-fitted_IC50_for_",
                                           ggplot2::ggplot_build(curr_plot)$layout$layout$content[[p]], ".png"),
                         plot = print(curr_plot_fun(p)),
                         height = 7, width = 7, units = "cm", dpi = 900)
-        
+
       }
-      
+
     }
-    
+
   }
 
   # cleaning up loop
 
-  rm(curr_p, curr_s, curr_ic50, op, p, curr_plot_fun)
+  summerr:::rm_silently(curr_p, curr_s, curr_ic50, op, p, curr_plot_fun)
 
   log_line("-")
 
