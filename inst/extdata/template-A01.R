@@ -1,6 +1,6 @@
 #' MALDI Peak Analysis                                              TEMPLATE A01
 #'
-#' analysis by:
+#' analysis by: 
 #'          on: <<TODAY>>
 #'
 #' template by: Benjamin Buchmuller
@@ -21,12 +21,12 @@ detect_these_ions <- c(mC = 2425, hmC = 2441, fC = 2439)  # m/z values
 signal_to_noise_ratio <- 3
 
 negative_control <- "DMSO"
-positive_control <- "DFOA"  # put the same as "negative_control" to omit empty factes in plots
+positive_control <- "DFOA"  # to omit empty plots, put the same as in "negative_control"
 
 normalize_before_fitting <- TRUE
-default_levels_negative <- c(mC = 0, hmC = 100, fC = 100, `hmC + fC` = 100)  # should be percentages
+default_levels_negative <- c(mC = 0, hmC = 100, fC = 100, `hmC + fC` = 100)  # percentages
 
-concentration_unit <- "\U00B5M"  # micro sign unicode character: \U00B5
+concentration_unit <- "\U00B5M"  # micro sign is "\U00B5"
 
 # parameters for plotting
 plot_ncol <- 2
@@ -135,14 +135,14 @@ for (group in seq_along(data_maldi$peaks)) {
 
       }
 
-      rm(i, fi, dat_p)
+      summerr:::rm_silently(i, fi, dat_p)
 
     }
 
     graphics::par(op)
     dev.off()
 
-    rm(content)
+    summerr:::rm_silently(content)
 
     # IC50 fitting
 
@@ -331,13 +331,14 @@ for (group in seq_along(data_maldi$peaks)) {
 
   }
 
-  # cleaning up loop
-
+  # clean up loop variables
   summerr:::rm_silently(curr_p, curr_s, curr_ic50, op, p, curr_plot_fun)
 
   log_line("-")
 
 }
+
+summerr:::rm_silently(group, group_name)
 
 if (length(data_ic50) > 0) {
 
@@ -385,7 +386,3 @@ if (length(data_ic50) > 0) {
 log_task("finished! Have a great day")
 
 log_line("=")
-
-#' =============================================================================
-
-
