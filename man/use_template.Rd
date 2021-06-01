@@ -12,3 +12,8 @@ use_template(version = "A01")
 \description{
 Use a template for a MALDI script
 }
+\details{
+\describe{
+\item{A01}{MALDI batch processing for 384-well assay; used in Palei (2021)}
+}
+}

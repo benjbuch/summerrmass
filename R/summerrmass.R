@@ -48,6 +48,12 @@ NULL
 #'
 #' @param version A template version identifier.
 #'
+#' @details
+#'
+#' \describe{
+#' \item{A01}{MALDI batch processing for 384-well assay; used in Palei (2021)}
+#' }
+#'
 #' @export
 use_template <- function(version = "A01") {
 
