@@ -360,7 +360,9 @@ maldi_batch <- function(path = NULL,
 
     if (use_p) {
 
-      dat_p <- readRDS(file = pth_p); attr(dat_p, "dir") <- curr_group_path
+      dat_p <- check_compatibility(readRDS(file = pth_p))
+      
+      attr(dat_p, "dir") <- curr_group_path
 
       summerr::log_process("imported", scales::comma(sum(lengths(dat_p))),
                   "peak assignments from backup")
@@ -538,4 +540,30 @@ maldi_batch <- function(path = NULL,
 
   list(spectra = all_s, peaks = all_p)
 
+}
+
+check_compatibility <- function(dat_p) {
+  
+  if (!("path_to_files" %in% colnames(dat_p))) {
+    
+    log_task("peak table is from a previous version")
+    
+    old_dat_p <- dplyr::select(dat_p, tidyselect::any_of(
+      c("ion", "mass", "intensity", "percent", "findex")))
+    
+    # since external data may not longer exist, derive paths from given paths;
+    # path_to_files will not contain mount point ("C:") under Windows;
+    # TODO: Check if nested "path" could be used as an additional join_by
+    
+    new_dat_p <- import_layout_from_paths.maldi(unlist(dat_p$path), relative_to = NULL)
+    
+    dat_p <- dplyr::left_join(old_dat_p, new_dat_p, by = c("findex"))
+    
+    log_process("updated")
+    
+    
+  }
+  
+  dat_p
+  
 }
