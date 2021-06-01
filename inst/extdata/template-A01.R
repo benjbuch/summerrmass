@@ -10,7 +10,7 @@
 #'
 #' -----------------------------------------------------------------------------
 #' BASIC USAGE
-#' Change the paramters below to reflect your needs and "source" this document.
+#' Change the parameters below to reflect your needs, save and "source" this document.
 #' -----------------------------------------------------------------------------
 
 trim_spectra_lower_bound = 2420
@@ -213,110 +213,121 @@ for (group in seq_along(data_maldi$peaks)) {
     curr_ic50 %>%
       dplyr::select(dplyr::group_vars(.), tidy) %>%
       tidyr::unnest(tidy) %>%
-      dplyr::mutate(p.value = scales::scientific(p.value)) %>%
+      dplyr::mutate(across(any_of(c("p.value")), scales::scientific)) %>%
       dplyr::mutate(across(where(is.double), round, digits = 3)) %>%
       readr::write_csv(file = file.path(
         attr(curr_s, "dir"),
         paste0(format(Sys.time(), "%y%m%d"), "-fitted_IC50_estimates.csv")))
 
-    log_process("rendering plots")
-
     # assemble one plot that will be written to several devices
 
     curr_plot <- curr_ic50 %>%
       dplyr::filter(ion == "hmC + fC") %>%
-      # make sure that empty facets are not dropped, but left empty
-      dplyr::mutate(content = factor(
-        content, unique(c(content, positive_control, negative_control))),
-        content = forcats::fct_relevel(content,
-        unique(c(positive_control, negative_control)), after = Inf)) %>%
-      ggplot2::ggplot(ggplot2::aes(x = concentration)) +
-      # original data points
-      ggplot2::geom_pointrange(data = . %>%
-                                 dplyr::select(group_vars(.), data) %>%
-                                 tidyr::unnest(data),
-                               ggplot2::aes(y = percent),
-                               stat = "summary", fun.data = ggplot2::mean_se,
-                               fatten = 1) +
-      # fitted data points
-      ggplot2::geom_path(data = . %>%
-                           dplyr::select(group_vars(.), augment_new) %>%
-                           tidyr::unnest(augment_new),
-                         ggplot2::aes(y = .fitted)) +
-      # add IC50 values
-      ggplot2::geom_text(data = . %>%
-                           dplyr::select(group_vars(.), tidy) %>%
-                           tidyr::unnest(tidy) %>%  dplyr::filter(term == "IC50"),
-                         ggplot2::aes(y = 110, x = 1, label = paste(
-                           round(estimate, -floor(log10(std.error / 10))), "\U00B1",
-                           round(std.error, -floor(log10(std.error / 10))), concentration_unit)),
-                         size = grid::convertUnit(unit(10, "pt"), "mm", valueOnly = TRUE),
-                         hjust = 0.5, vjust = 1) +
-      # labels
-      labs(y = ifelse(negative_control %in% curr_p$content,
-                      paste0("% hmC + fC (normalized to ", negative_control, ")"),
-                      "% hmC + fC"),
-           x = paste("compound concentration /", concentration_unit)) +
-      # scales
-      ggplot2::scale_x_log10(labels = scales::trans_format("log10", scales::math_format(10^.x))) +
-      ggplot2::scale_y_continuous(breaks = seq(0, 100, 25), expand = c(0.05, 0.05)) +
-      ggplot2::coord_cartesian(ylim = c(-5, 110)) +
-      # facets
-      ggplot2::facet_wrap(ggplot2::vars(content), drop = FALSE) +
-      # theme
-      ggplot2::theme_linedraw(base_size = 12) + ggplot2::theme(
-        panel.grid = ggplot2::element_blank()
-      )
+      dplyr::filter(lengths(model) != 0)
+    
+    if (nrow(curr_plot) == 0) {
+      
+      log_process("there is nothing to plot")
+      
+    } else {
+      
+      log_process("rendering plots")
+      
+      curr_plot <- curr_plot %>% 
+        # make sure that empty facets are not dropped, but left empty
+        dplyr::mutate(content = factor(
+          content, unique(c(content, positive_control, negative_control))),
+          content = forcats::fct_relevel(content,
+                                         unique(c(positive_control, negative_control)), after = Inf)) %>%
+        ggplot2::ggplot(ggplot2::aes(x = concentration)) +
+        # original data points
+        ggplot2::geom_pointrange(data = . %>%
+                                   dplyr::select(group_vars(.), data) %>%
+                                   tidyr::unnest(data),
+                                 ggplot2::aes(y = percent),
+                                 stat = "summary", fun.data = ggplot2::mean_se,
+                                 fatten = 1) +
+        # fitted data points
+        ggplot2::geom_path(data = . %>%
+                             dplyr::select(group_vars(.), augment_new) %>%
+                             tidyr::unnest(augment_new),
+                           ggplot2::aes(y = .fitted)) +
+        # add IC50 values
+        ggplot2::geom_text(data = . %>%
+                             dplyr::select(group_vars(.), tidy) %>%
+                             tidyr::unnest(tidy) %>%  dplyr::filter(term == "IC50"),
+                           ggplot2::aes(y = 110, x = 1, label = paste(
+                             round(estimate, -floor(log10(std.error / 10))), "\U00B1",
+                             round(std.error, -floor(log10(std.error / 10))), concentration_unit)),
+                           size = grid::convertUnit(unit(10, "pt"), "mm", valueOnly = TRUE),
+                           hjust = 0.5, vjust = 1) +
+        # labels
+        labs(y = ifelse(negative_control %in% curr_p$content,
+                        paste0("% hmC + fC (normalized to ", negative_control, ")"),
+                        "% hmC + fC"),
+             x = paste("compound concentration /", concentration_unit)) +
+        # scales
+        ggplot2::scale_x_log10(labels = scales::trans_format("log10", scales::math_format(10^.x))) +
+        ggplot2::scale_y_continuous(breaks = seq(0, 100, 25), expand = c(0.05, 0.05)) +
+        ggplot2::coord_cartesian(ylim = c(-5, 110)) +
+        # facets
+        ggplot2::facet_wrap(ggplot2::vars(content), drop = FALSE) +
+        # theme
+        ggplot2::theme_linedraw(base_size = 12) + ggplot2::theme(
+          panel.grid = ggplot2::element_blank()
+        )
+      
+      tryCatch({
+        
+        print(curr_plot)
+        
+      }, error = function(e) {
+        
+        # typically fails with
+        #
+        # grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y,  :
+        # polygon edge not found
+        #
+        # source unclear; however, repeating seems to solve the issue, else
+        # epic fail
+        
+        graphics.off()
+        
+        print(curr_plot)
+        
+      })
 
-    tryCatch({
-
+      # plot: all fits
+      
+      pdf(file = file.path(attr(curr_s, "dir"),
+                           paste0(format(Sys.time(), "%y%m%d"), "-fitted_IC50_estimates.pdf")),
+          height = 21.5 / 2.54, width = 30.5 / 2.54, paper = "a4")
+      
       print(curr_plot)
-
-    }, error = function(e) {
-
-      # typically fails with
-      #
-      # grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y,  :
-      # polygon edge not found
-      #
-      # source unclear; however, repeating seems to solve the issue, else
-      # epic fail
-
-      graphics.off()
-
-      print(curr_plot)
-
-    })
-
-    # plot: all fits
-
-    pdf(file = file.path(attr(curr_s, "dir"),
-      paste0(format(Sys.time(), "%y%m%d"), "-fitted_IC50_estimates.pdf")),
-      height = 21.5 / 2.54, width = 30.5 / 2.54, paper = "a4")
-
-    print(curr_plot)
-
-    dev.off()
-
-    # plot: fits by compound
-
-    curr_plot_fun <- function(p) {
-
-      curr_plot + ggforce::facet_wrap_paginate(ggplot2::vars(content), drop = FALSE,
-                                               nrow = 1, ncol = 1, page = p)
-
+      
+      dev.off()
+      
+      # plot: fits by compound
+      
+      curr_plot_fun <- function(p) {
+        
+        curr_plot + ggforce::facet_wrap_paginate(ggplot2::vars(content), drop = FALSE,
+                                                 nrow = 1, ncol = 1, page = p)
+        
+      }
+      
+      if (plot_each_compound == TRUE) for (p in seq_len(ggforce::n_pages(curr_plot_fun(0)))) {
+        
+        ggplot2::ggsave(path = file.path(attr(curr_s, "dir")),
+                        filename = paste0(format(Sys.time(), "%y%m%d"), "-fitted_IC50_for_",
+                                          ggplot2::ggplot_build(curr_plot)$layout$layout$content[[p]], ".png"),
+                        plot = print(curr_plot_fun(p)),
+                        height = 7, width = 7, units = "cm", dpi = 900)
+        
+      }
+      
     }
-
-    if (plot_each_compound == TRUE) for (p in seq_len(ggforce::n_pages(curr_plot_fun(0)))) {
-
-      ggplot2::ggsave(path = file.path(attr(curr_s, "dir")),
-                      filename = paste0(format(Sys.time(), "%y%m%d"), "-fitted_IC50_for_",
-                                        ggplot2::ggplot_build(curr_plot)$layout$layout$content[[p]], ".png"),
-        plot = print(curr_plot_fun(p)),
-        height = 7, width = 7, units = "cm", dpi = 900)
-
-    }
-
+    
   }
 
   # cleaning up loop
