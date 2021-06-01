@@ -548,7 +548,7 @@ check_compatibility <- function(dat_p) {
     
     log_task("peak table is from a previous version")
     
-    old_dat_p <- dplyr::select(dat_p, tidyselect::any_of(
+    old_dat_p <- dplyr::select(dplyr::ungroup(dat_p), tidyselect::any_of(
       c("ion", "mass", "intensity", "percent", "findex")))
     
     # since external data may not longer exist, derive paths from given paths;
