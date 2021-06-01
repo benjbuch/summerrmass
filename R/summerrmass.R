@@ -40,6 +40,7 @@ utils::globalVariables(".")
 #' \link{maldi_batch}
 #'
 #' @docType package
+#' @import summerr
 #' @name summerrmass-package
 NULL
 

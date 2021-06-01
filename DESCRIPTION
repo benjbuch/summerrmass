@@ -12,7 +12,6 @@ Maintainer: Benjamin Buchmuller <benjamin.buchmuller@tu-dortmund.de>
 Description: This package allows to associate a MALDI plate layout with an Excel
     file to identify various compounds and concentrations; it will read out the mass
     spectrum for each well at defined m/z values and (optionally) plot the data.
-    Use four spaces when indenting paragraphs within the Description.
 License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
