@@ -301,7 +301,7 @@ for (group in seq_along(data_maldi$peaks)) {
 Internally, a call is made to `broom::tidy` and `broom::augment` to extract all
 statistical parameters and calculate the fitted curves.
 
-This is how the fit paramters retrieved by `broom::tidy` look like:
+This is how the fit parameters retrieved by `broom::tidy` look like:
 
 ```{r}
 data_ic50[[group]] %>% 
