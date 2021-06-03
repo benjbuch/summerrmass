@@ -16,8 +16,11 @@ fit_IC50 <- function(x, formula,
                        limits_lower = c(0, 5), limits_upper = c(50, 100),
                        limits_hill = c(-Inf, +Inf), limits_IC50 = c(0, 1e3)) {
 
-  ll <- c(limits_hill[[1]], limits_lower[[1]], limits_upper[[1]], limits_IC50[[1]])
-  ul <- c(limits_hill[[2]], limits_lower[[2]], limits_upper[[2]], limits_IC50[[2]])
+  params <- list(hill = limits_hill, lower = limits_lower, upper = limits_upper,
+                 IC50 = limits_IC50)
+
+  ll <- sapply(params, min, na.rm = TRUE, USE.NAMES = TRUE)
+  ul <- sapply(params, max, na.rm = TRUE, USE.NAMES = TRUE)
 
   drc::drm(data = x, formula = formula, lowerl = ll, upperl = ul,
            fct = drc::LL.4(names = c("hill", "lower", "upper", "IC50")))
