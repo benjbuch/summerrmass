@@ -167,9 +167,9 @@ maldi_batch <- function(path = NULL,
       path = path, pattern = pattern, ignore.case = TRUE,
       recursive = TRUE, full.names = TRUE),
       pivot = pivot, relative_to = path) %>%
-      dplyr::ungroup() %>%
-      dplyr::pull("path_to_group")
-
+        dplyr::ungroup() %>%
+        dplyr::pull("path_to_group")
+    
   }
 
   list_expdata <- function(pattern, path) {
@@ -513,7 +513,7 @@ maldi_batch <- function(path = NULL,
       dplyr::mutate(dplyr::across(tidyselect::vars_select_helpers$where(is.double),
                                   round, digits = 4)) %>%
       readr::write_csv(file = sub(x = pth_p, ".rds", "-long.csv"))
-
+    
     dat_p %>%
       dplyr::select(!c(tidyselect::any_of(c("findex", "gindex", "pivot", "file",
                                             "well_let", "well_num",
@@ -521,7 +521,10 @@ maldi_batch <- function(path = NULL,
                                             "path_to_files")),
                        tidyselect::starts_with("sub_"))) %>%
       tidyr::pivot_wider(names_from = "ion", values_from = c("intensity", "percent",
-                                                             "mass")) %>%
+                                                             "mass"),
+                         values_fn = list) %>%
+      # resolve replicates
+      tidyr::unnest(tidyselect::vars_select_helpers$where(is.list)) %>% 
       dplyr::mutate(dplyr::across(tidyselect::vars_select_helpers$where(is.double),
                                   round, digits = 4)) %>%
       readr::write_csv(file = sub(x = pth_p, ".rds", "-wide.csv"))
@@ -545,7 +548,7 @@ maldi_batch <- function(path = NULL,
 check_compatibility <- function(dat_p) {
 
   if (!("path_to_files" %in% colnames(dat_p))) {
-
+    
     summerr::log_task("peak table is from a previous version")
 
     old_dat_p <- dplyr::select(dplyr::ungroup(dat_p), tidyselect::any_of(
@@ -553,9 +556,8 @@ check_compatibility <- function(dat_p) {
 
     # since external data may not longer exist, derive paths from given paths;
     # path_to_files will not contain mount point ("C:") under Windows;
-    # TODO: Check if nested "path" could be used as an additional join_by
 
-    new_dat_p <- import_layout_from_paths.maldi(unlist(dat_p$path), relative_to = NULL)
+    new_dat_p <- import_layout_from_paths.maldi(unique(dat_p$path), relative_to = NULL)
 
     dat_p <- dplyr::left_join(old_dat_p, new_dat_p, by = c("findex"))
 

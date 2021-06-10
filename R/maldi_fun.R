@@ -34,8 +34,9 @@ import_layout_from_paths.maldi <- function(paths, pivot = "[0-9]_[A-Z]+[0-9]+",
 
   datam <- dplyr::mutate(datad, summerr::as_well(stringr::str_extract(pivot, well_regex),
                                         as.tibble = TRUE)) %>%
-    dplyr::arrange(.data$well, .data$sub_1, .by_group = TRUE) %>%
-    dplyr::group_by(.data$well)
+    dplyr::arrange(dplyr::across(tidyselect::any_of(c("well", "sub_1"))), 
+                   .by_group = TRUE) %>%
+    dplyr::group_by(dplyr::across(tidyselect::any_of(c("well"))))
 
   attr(datam, "dir") <- attr(datad, "dir")
 
