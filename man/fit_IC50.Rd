@@ -7,8 +7,8 @@
 fit_IC50(
   x,
   formula,
-  limits_lower = c(0, 5),
-  limits_upper = c(50, 100),
+  limits_lower = c(-10, 10),
+  limits_upper = c(50, 150),
   limits_hill = c(-Inf, +Inf),
   limits_IC50 = c(0, 1000)
 )
