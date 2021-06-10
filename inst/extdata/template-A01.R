@@ -1,6 +1,6 @@
 #' MALDI Peak Analysis                                              TEMPLATE A01
 #'
-#' analysis by: 
+#' analysis by:
 #'          on: <<TODAY>>
 #'
 #' template by: Benjamin Buchmuller
@@ -257,11 +257,16 @@ for (group in seq_along(data_maldi$peaks)) {
         ggplot2::geom_text(data = . %>%
                              dplyr::select(group_vars(.), tidy) %>%
                              tidyr::unnest(tidy) %>%  dplyr::filter(term == "IC50"),
-                           ggplot2::aes(y = 110, x = 1, label = paste(
-                             round(estimate, -floor(log10(std.error / 10))), "\U00B1",
-                             round(std.error, -floor(log10(std.error / 10))), concentration_unit)),
+                           ggplot2::aes(
+                             # y = 110, x = 1,  ## centered on top
+                             y = 0, x = 0,
+                             label = paste("  ",
+                               round(estimate, -floor(log10(std.error / 10))), "\U00B1",
+                               round(std.error, -floor(log10(std.error / 10))), concentration_unit)),
                            size = grid::convertUnit(unit(10, "pt"), "mm", valueOnly = TRUE),
-                           hjust = 0.5, vjust = 1) +
+                           # hjust = 0.5, vjust = 1  ## centered on top
+                           hjust = 0, vjust = 0
+        ) +
         # labels
         labs(y = ifelse(negative_control %in% curr_p$content,
                         paste0("% hmC + fC (normalized to ", negative_control, ")"),
