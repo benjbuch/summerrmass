@@ -4,7 +4,7 @@
 #'          on: <<TODAY>>
 #'
 #' template by: Benjamin Buchmuller
-#'          on: 210601
+#'          on: 210622
 #'
 #' <<RVERSION>>
 #'
@@ -14,6 +14,8 @@
 #' document.
 #' -----------------------------------------------------------------------------
 
+# parameters analysis:
+
 trim_spectra_lower_bound = 2420
 trim_spectra_upper_bound = 2445
 
@@ -21,19 +23,24 @@ detect_these_ions <- c(mC = 2425, hmC = 2441, fC = 2439)  # m/z values
 signal_to_noise_ratio <- 3
 
 negative_control <- "DMSO"
-positive_control <- "DFOA"  # to omit empty plots, put the same as in "negative_control"
+positive_control <- "DFOA"  # to omit empty plots, put the same as in `negative_control`
 
 normalize_before_fitting <- TRUE
 default_levels_negative <- c(mC = 0, hmC = 100, fC = 100, `hmC + fC` = 100)  # percentages
 
 concentration_unit <- "\U00B5M"  # micro sign is "\U00B5"
 
-# parameters for plotting
+# parameters plotting:
+
 plot_ncol <- 2
 plot_nrow <- 6
 plot_each_compound <- TRUE  # this make take a while if TRUE
 
-#' =============================================================================
+# advanced settings:
+
+layout_file = NULL  # prompt for layout file if NULL; see ?summerrmass::maldi_batch
+
+#' -----------------------------------------------------------------------------
 
 library(summerrmass)
 library(tidyverse, quietly = TRUE)
@@ -44,7 +51,7 @@ data_ic50 <- list()
 
 data_maldi <- maldi_batch(
   path  = NULL,  # will prompt for the direcotry to analyze
-  layout_file = NULL,  # will prompt for each sample group
+  layout_file = layout_file,
   pivot = "[0-9]_[A-Z]+[0-9]+",  # regex to match the "well" folders
   # pre-processing of spectra
   FUN_spect = maldi_average_by_well,
