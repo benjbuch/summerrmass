@@ -196,10 +196,6 @@ for (group in seq_along(data_maldi$peaks)) {
 
       log_object(negative_control.levels)
 
-    }
-
-    if (normalize_before_fitting) {
-
       curr_p <- curr_p %>%
         dplyr::left_join(negative_control.levels, by = "ion") %>%
         # express percentages relative to the negative before fitting; may cause
@@ -267,9 +263,10 @@ for (group in seq_along(data_maldi$peaks)) {
                            ggplot2::aes(
                              # y = 110, x = 1,  ## centered on top
                              y = 0, x = 0,
-                             label = paste("  ",
+                             label = ifelse(is.finite(estimate), paste("  ",
                                round(estimate, -floor(log10(std.error / 10))), "\U00B1",
-                               round(std.error, -floor(log10(std.error / 10))), concentration_unit)),
+                               round(std.error, -floor(log10(std.error / 10))), concentration_unit), ""),
+                           ),
                            size = grid::convertUnit(unit(10, "pt"), "mm", valueOnly = TRUE),
                            # hjust = 0.5, vjust = 1  ## centered on top
                            hjust = 0, vjust = 0
