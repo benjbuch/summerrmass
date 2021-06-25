@@ -259,13 +259,13 @@ for (group in seq_along(data_maldi$peaks)) {
         # add IC50 values
         ggplot2::geom_text(data = . %>%
                              dplyr::select(group_vars(.), tidy) %>%
-                             tidyr::unnest(tidy) %>%  dplyr::filter(term == "IC50"),
+                             tidyr::unnest(tidy) %>%  dplyr::filter(term == "IC50", is.finite(estimate)),
                            ggplot2::aes(
                              # y = 110, x = 1,  ## centered on top
                              y = 0, x = 0,
-                             label = ifelse(is.finite(estimate), paste("  ",
+                             label = paste("  ",
                                round(estimate, -floor(log10(std.error / 10))), "\U00B1",
-                               round(std.error, -floor(log10(std.error / 10))), concentration_unit), ""),
+                               round(std.error, -floor(log10(std.error / 10))), concentration_unit),
                            ),
                            size = grid::convertUnit(unit(10, "pt"), "mm", valueOnly = TRUE),
                            # hjust = 0.5, vjust = 1  ## centered on top
