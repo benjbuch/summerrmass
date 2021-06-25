@@ -4,7 +4,7 @@
 #'          on: <<TODAY>>
 #'
 #' template by: Benjamin Buchmuller
-#'          on: 210622
+#'          on: 210625
 #'
 #' <<RVERSION>>
 #'
@@ -23,7 +23,7 @@ detect_these_ions <- c(mC = 2425, hmC = 2441, fC = 2439)  # m/z values
 signal_to_noise_ratio <- 3
 
 negative_control <- "DMSO"
-positive_control <- "DFOA"  # to omit empty plots, put the same as in `negative_control`
+positive_control <- "DMSO"  # to omit empty plots, put the same as in `negative_control`
 
 normalize_before_fitting <- TRUE
 default_levels_negative <- c(mC = 0, hmC = 100, fC = 100, `hmC + fC` = 100)  # percentages
