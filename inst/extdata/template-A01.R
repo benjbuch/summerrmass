@@ -4,7 +4,7 @@
 #'          on: <<TODAY>>
 #'
 #' template by: Benjamin Buchmuller
-#'          on: 210625
+#'          on: 210702
 #'
 #' <<RVERSION>>
 #'
@@ -237,12 +237,10 @@ for (group in seq_along(data_maldi$peaks)) {
 
       log_process("rendering plots")
 
-      # curr_plot <- 
-        
-      curr_plot %>%
+      curr_plot <- curr_plot %>%
         # make sure that empty facets are not dropped, but left empty
         dplyr::mutate(content = factor(
-          content, unique(c(content, positive_control, negative_control))),
+          content, na.omit(unique(c(curr_ic50$content, positive_control, negative_control)))),
           content = forcats::fct_relevel(content,
                                          unique(c(positive_control, negative_control)), after = Inf)) %>%
         ggplot2::ggplot(ggplot2::aes(x = concentration)) +
@@ -265,16 +263,23 @@ for (group in seq_along(data_maldi$peaks)) {
                            ggplot2::aes(
                              # y = 110, x = 1,  ## centered on top
                              y = 0, x = 0,
-                             label = paste("  ",
-                               round(estimate, -floor(log10(std.error / 10))), "\U00B1",
-                               round(std.error, -floor(log10(std.error / 10))), concentration_unit),
+                             label = ifelse(
+                               is.finite(estimate), paste(
+                                 "  ",
+                                 ifelse(
+                                   is.finite(std.error),
+                                   paste(
+                                     round(estimate, -floor(log10(std.error / 10))), "\U00B1",
+                                     round(std.error, -floor(log10(std.error / 10)))),
+                                   paste("\U007E ", round(estimate, -floor(log10(estimate) / 10)))),
+                                 concentration_unit), "")
                            ),
                            size = grid::convertUnit(unit(10, "pt"), "mm", valueOnly = TRUE),
                            # hjust = 0.5, vjust = 1  ## centered on top
                            hjust = 0, vjust = 0
         ) +
         # labels
-        labs(y = ifelse(negative_control %in% curr_p$content,
+        labs(y = ifelse(negative_control %in% curr_ic50$content,
                         paste0("% hmC + fC (normalized to ", negative_control, ")"),
                         "% hmC + fC"),
              x = paste("compound concentration /", concentration_unit)) +
