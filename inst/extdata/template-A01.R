@@ -229,7 +229,7 @@ for (group in seq_along(data_maldi$peaks)) {
       dplyr::filter(ion == "hmC + fC") %>%
       dplyr::filter(lengths(model) != 0)
 
-    if (nrow(curr_plot) == 0) {
+    if (nrow(curr_plot) == 0 || all(lengths(curr_plot$data) == 0)) {
 
       log_process("there is nothing to plot")
 
@@ -237,7 +237,9 @@ for (group in seq_along(data_maldi$peaks)) {
 
       log_process("rendering plots")
 
-      curr_plot <- curr_plot %>%
+      # curr_plot <- 
+        
+      curr_plot %>%
         # make sure that empty facets are not dropped, but left empty
         dplyr::mutate(content = factor(
           content, unique(c(content, positive_control, negative_control))),
