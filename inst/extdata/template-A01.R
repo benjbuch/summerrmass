@@ -110,7 +110,7 @@ for (group in seq_along(data_maldi$peaks)) {
     for (content in unique(curr_p$content)) {
 
       dat_p <- curr_p %>%
-        dplyr::filter(content == content) %>%
+        dplyr::filter(content == !!content) %>%
         dplyr::group_by(findex, well, content, concentration) %>%
         dplyr::summarize(mass = list(mass), intensity = list(intensity),
                          n_replicates = max(n_replicates), .groups = "keep") %>%
@@ -129,7 +129,7 @@ for (group in seq_along(data_maldi$peaks)) {
 
         fi <- dat_p$findex[[i]]
 
-        maldi_draw_spectrum(curr_s[[fi]], x = dat_p$mass[[i]], y = dat_p$intensity[[i]],
+        maldi_draw_spectrum(curr_s[[as.name(fi)]], x = dat_p$mass[[i]], y = dat_p$intensity[[i]],
                             xaxt = c("n", "s")[(i %in% get_border_indices(
                               dat_p$findex, border = "b", byrow = TRUE) + 1)],
                             SNR = signal_to_noise_ratio)
