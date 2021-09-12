@@ -29,7 +29,7 @@ devtools::install_github("benjbuch/summerrmass")
 If you need a specific release, you can install it using:
 
 ``` r
-devtools::install_github("benjbuch/summerrmass@v1.0.0")
+devtools::install_github("benjbuch/summerrmass@v1.1")
 ```
 
 ## Showcases
