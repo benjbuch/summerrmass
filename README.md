@@ -4,6 +4,8 @@
 # summerrmass
 
 <!-- badges: start -->
+
+[![DOI](https://zenodo.org/badge/367427371.svg)](https://zenodo.org/badge/latestdoi/367427371)
 <!-- badges: end -->
 
 `summerrmass` collects functions and workflows to batch-process MALDI
